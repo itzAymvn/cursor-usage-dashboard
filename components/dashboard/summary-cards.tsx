@@ -6,9 +6,14 @@ import { memo, useMemo } from "react"
 interface SummaryCardsProps {
 	summary: AnalyticsSummary
 	isLoading?: boolean
+	isRefreshing?: boolean
 }
 
-export const SummaryCards = memo(function SummaryCards({ summary, isLoading = false }: SummaryCardsProps) {
+export const SummaryCards = memo(function SummaryCards({
+	summary,
+	isLoading = false,
+	isRefreshing = false,
+}: SummaryCardsProps) {
 	// Memoize the savings badge to prevent re-renders
 	const savingsBadge = useMemo(
 		() => ({
@@ -34,6 +39,7 @@ export const SummaryCards = memo(function SummaryCards({ summary, isLoading = fa
 				icon={BarChart3}
 				format="number"
 				isLoading={isLoading}
+				isRefreshing={isRefreshing}
 				className="col-span-1"
 			/>
 
@@ -45,6 +51,7 @@ export const SummaryCards = memo(function SummaryCards({ summary, isLoading = fa
 				icon={DollarSign}
 				format="currency"
 				isLoading={isLoading}
+				isRefreshing={isRefreshing}
 				className="col-span-1"
 			/>
 
@@ -56,6 +63,7 @@ export const SummaryCards = memo(function SummaryCards({ summary, isLoading = fa
 				icon={Activity}
 				format="currency"
 				isLoading={isLoading}
+				isRefreshing={isRefreshing}
 				className="col-span-1"
 			/>
 
@@ -67,6 +75,7 @@ export const SummaryCards = memo(function SummaryCards({ summary, isLoading = fa
 				icon={Calendar}
 				format="currency"
 				isLoading={isLoading}
+				isRefreshing={isRefreshing}
 				className="col-span-1"
 			/>
 
@@ -79,6 +88,7 @@ export const SummaryCards = memo(function SummaryCards({ summary, isLoading = fa
 				format="currency"
 				badge={savingsBadge}
 				isLoading={isLoading}
+				isRefreshing={isRefreshing}
 				className="col-span-1"
 			/>
 		</div>
@@ -88,9 +98,14 @@ export const SummaryCards = memo(function SummaryCards({ summary, isLoading = fa
 interface SecondaryMetricsProps {
 	summary: AnalyticsSummary
 	isLoading?: boolean
+	isRefreshing?: boolean
 }
 
-export const SecondaryMetrics = memo(function SecondaryMetrics({ summary, isLoading = false }: SecondaryMetricsProps) {
+export const SecondaryMetrics = memo(function SecondaryMetrics({
+	summary,
+	isLoading = false,
+	isRefreshing = false,
+}: SecondaryMetricsProps) {
 	// Memoize trend objects to prevent re-renders
 	const dailyAverageTrend = useMemo(
 		() => ({
@@ -129,6 +144,7 @@ export const SecondaryMetrics = memo(function SecondaryMetrics({ summary, isLoad
 				format="currency"
 				trend={dailyAverageTrend}
 				isLoading={isLoading}
+				isRefreshing={isRefreshing}
 			/>
 
 			{/* Trend */}
@@ -138,6 +154,7 @@ export const SecondaryMetrics = memo(function SecondaryMetrics({ summary, isLoad
 				subtitle="Usage change"
 				trend={trendTrend}
 				isLoading={isLoading}
+				isRefreshing={isRefreshing}
 			/>
 
 			{/* Anomalies */}
@@ -147,6 +164,7 @@ export const SecondaryMetrics = memo(function SecondaryMetrics({ summary, isLoad
 				subtitle="High-usage models"
 				badge={anomaliesBadge}
 				isLoading={isLoading}
+				isRefreshing={isRefreshing}
 			/>
 		</div>
 	)

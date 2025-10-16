@@ -21,6 +21,7 @@ interface MetricCardProps {
 	}
 	className?: string
 	isLoading?: boolean
+	isRefreshing?: boolean
 	format?: "currency" | "number" | "percentage" | "raw"
 }
 
@@ -33,6 +34,7 @@ export const MetricCard = memo(function MetricCard({
 	badge,
 	className,
 	isLoading = false,
+	isRefreshing = false,
 	format = "raw",
 }: MetricCardProps) {
 	const formatValue = useCallback(
@@ -77,7 +79,7 @@ export const MetricCard = memo(function MetricCard({
 		)
 	}, [trend, getTrendColor, getTrendIcon])
 
-	if (isLoading) {
+	if (isLoading && !isRefreshing) {
 		return (
 			<Card className={cn("relative", className)}>
 				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

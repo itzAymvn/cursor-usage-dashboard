@@ -12,6 +12,7 @@ interface PlanUsageCardProps {
 	plan: string
 	dateRangeStart: string
 	isLoading?: boolean
+	isRefreshing?: boolean
 }
 
 const PLAN_LIMITS = {
@@ -20,7 +21,13 @@ const PLAN_LIMITS = {
 	ultra: { paid: 200, included: 400 },
 } as const
 
-export function PlanUsageCard({ summary, plan, dateRangeStart, isLoading = false }: PlanUsageCardProps) {
+export function PlanUsageCard({
+	summary,
+	plan,
+	dateRangeStart,
+	isLoading = false,
+	isRefreshing = false,
+}: PlanUsageCardProps) {
 	const planLimits = PLAN_LIMITS[plan as keyof typeof PLAN_LIMITS] || PLAN_LIMITS.pro
 
 	const usageData = useMemo(() => {
@@ -69,7 +76,7 @@ export function PlanUsageCard({ summary, plan, dateRangeStart, isLoading = false
 		}
 	}, [summary, planLimits.included, dateRangeStart])
 
-	if (isLoading) {
+	if (isLoading && !isRefreshing) {
 		return (
 			<div className="bg-card rounded-lg border p-6">
 				<div className="flex flex-row items-center justify-between space-y-0 pb-2">

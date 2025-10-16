@@ -15,6 +15,7 @@ import { RefreshCw, AlertCircle, CheckCircle, RotateCcw, Table, List } from "luc
 export default function Dashboard() {
 	const [analytics, setAnalytics] = useState<UsageAnalytics | null>(null)
 	const [isLoading, setIsLoading] = useState(true)
+	const [isRefreshing, setIsRefreshing] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
 	const [apiToken, setApiToken] = useState<string>("")
@@ -90,33 +91,44 @@ export default function Dashboard() {
 		// Settings modal will be opened by the SettingsModal component
 	}
 
-	const fetchAnalytics = useCallback(async () => {
-		if (!apiToken) {
-			setError("Please set your Cursor API token in settings first.")
-			setIsLoading(false)
-			return
-		}
-
-		try {
-			setIsLoading(true)
-			setError(null)
-
-			const response = await fetch("/api/usage")
-			const data = await response.json()
-
-			if (!response.ok) {
-				throw new Error(data.message || data.error || "Failed to fetch analytics")
+	const fetchAnalytics = useCallback(
+		async (isRefresh = false) => {
+			if (!apiToken) {
+				setError("Please set your Cursor API token in settings first.")
+				setIsLoading(false)
+				return
 			}
 
-			setAnalytics(data)
-			setLastRefresh(new Date())
-		} catch (err) {
-			console.error("Dashboard fetch error:", err)
-			setError(err instanceof Error ? err.message : "Failed to fetch analytics")
-		} finally {
-			setIsLoading(false)
-		}
-	}, [apiToken])
+			try {
+				if (isRefresh) {
+					setIsRefreshing(true)
+				} else {
+					setIsLoading(true)
+				}
+				setError(null)
+
+				const response = await fetch("/api/usage")
+				const data = await response.json()
+
+				if (!response.ok) {
+					throw new Error(data.message || data.error || "Failed to fetch analytics")
+				}
+
+				setAnalytics(data)
+				setLastRefresh(new Date())
+			} catch (err) {
+				console.error("Dashboard fetch error:", err)
+				setError(err instanceof Error ? err.message : "Failed to fetch analytics")
+			} finally {
+				if (isRefresh) {
+					setIsRefreshing(false)
+				} else {
+					setIsLoading(false)
+				}
+			}
+		},
+		[apiToken]
+	)
 
 	useEffect(() => {
 		if (apiToken) {
@@ -146,7 +158,7 @@ export default function Dashboard() {
 
 			// Refresh interval
 			intervalId = setInterval(() => {
-				fetchAnalytics()
+				fetchAnalytics(true)
 				const now = Date.now()
 				nextRefreshTime = now + autoRefreshInterval * 1000
 				setCountdown(autoRefreshInterval) // Reset countdown after refresh
@@ -218,12 +230,14 @@ export default function Dashboard() {
 							/>
 							<div className="flex items-center gap-2">
 								<Button
-									onClick={fetchAnalytics}
-									disabled={isLoading || !apiToken}
+									onClick={() => fetchAnalytics(false)}
+									disabled={isLoading || isRefreshing || !apiToken}
 									variant="outline"
 									size="sm"
 								>
-									<RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+									<RefreshCw
+										className={`h-4 w-4 mr-2 ${isLoading || isRefreshing ? "animate-spin" : ""}`}
+									/>
 									Refresh
 								</Button>
 								<Button
@@ -253,7 +267,7 @@ export default function Dashboard() {
 				)}
 
 				{/* Success Alert */}
-				{!error && analytics && !isLoading && (
+				{!error && analytics && !isLoading && !isRefreshing && (
 					<Alert>
 						<CheckCircle className="h-4 w-4" />
 						<AlertDescription>
@@ -265,7 +279,9 @@ export default function Dashboard() {
 				)}
 
 				{/* Summary Cards */}
-				{analytics && <SummaryCards summary={analytics.summary} isLoading={isLoading} />}
+				{analytics && (
+					<SummaryCards summary={analytics.summary} isLoading={isLoading} isRefreshing={isRefreshing} />
+				)}
 
 				{/* Plan Usage */}
 				{analytics && (
@@ -280,6 +296,7 @@ export default function Dashboard() {
 								plan={plan}
 								dateRangeStart={analytics.dateRange.start}
 								isLoading={isLoading}
+								isRefreshing={isRefreshing}
 							/>
 						</div>
 					</div>
@@ -319,10 +336,14 @@ export default function Dashboard() {
 					</div>
 
 					{analytics && currentView === "models" && (
-						<ModelTable models={analytics.models} isLoading={isLoading} />
+						<ModelTable models={analytics.models} isLoading={isLoading} isRefreshing={isRefreshing} />
 					)}
 					{analytics && currentView === "requests" && (
-						<RequestsTable requests={analytics.requests} isLoading={isLoading} />
+						<RequestsTable
+							requests={analytics.requests}
+							isLoading={isLoading}
+							isRefreshing={isRefreshing}
+						/>
 					)}
 				</div>
 			</main>

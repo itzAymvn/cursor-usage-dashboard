@@ -12,12 +12,17 @@ import { cn } from "@/lib/utils"
 interface ModelTableProps {
 	models: ModelMetrics[]
 	isLoading?: boolean
+	isRefreshing?: boolean
 }
 
 type SortField = keyof ModelMetrics
 type SortDirection = "asc" | "desc"
 
-export const ModelTable = memo(function ModelTable({ models, isLoading = false }: ModelTableProps) {
+export const ModelTable = memo(function ModelTable({
+	models,
+	isLoading = false,
+	isRefreshing = false,
+}: ModelTableProps) {
 	const [sortField, setSortField] = useState<SortField>("tokens")
 	const [sortDirection, setSortDirection] = useState<SortDirection>("desc")
 
@@ -80,7 +85,7 @@ export const ModelTable = memo(function ModelTable({ models, isLoading = false }
 		}
 	}, [])
 
-	if (isLoading) {
+	if (isLoading && !isRefreshing) {
 		return (
 			<div className="space-y-4">
 				<div className="h-8 bg-muted rounded animate-pulse" />

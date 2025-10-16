@@ -12,13 +12,18 @@ import { useMemo, useState, useCallback, memo } from "react"
 interface RequestsTableProps {
 	requests: CursorUsageEvent[]
 	isLoading?: boolean
+	isRefreshing?: boolean
 }
 
 type SortField = keyof CursorUsageEvent | "totalTokens" | "cost"
 type StringSortField = "timestamp" | "model" | "kind"
 type SortDirection = "asc" | "desc"
 
-export const RequestsTable = memo(function RequestsTable({ requests, isLoading = false }: RequestsTableProps) {
+export const RequestsTable = memo(function RequestsTable({
+	requests,
+	isLoading = false,
+	isRefreshing = false,
+}: RequestsTableProps) {
 	const [sortField, setSortField] = useState<SortField>("timestamp")
 	const [sortDirection, setSortDirection] = useState<SortDirection>("desc")
 
@@ -108,7 +113,7 @@ export const RequestsTable = memo(function RequestsTable({ requests, isLoading =
 		return event.requestsCosts || 0
 	}, [])
 
-	if (isLoading) {
+	if (isLoading && !isRefreshing) {
 		return (
 			<div className="rounded-md border">
 				<Table>
