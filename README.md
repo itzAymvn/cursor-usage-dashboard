@@ -45,17 +45,7 @@ A production-ready analytics dashboard that connects to the Cursor API to displa
 pnpm install
 ```
 
-### 2. Environment Setup
-
-See [ENV_CONFIG.md](./ENV_CONFIG.md) for detailed environment setup instructions.
-
-Create a `.env.local` file with your Cursor API token:
-
-```bash
-CURSOR_API_TOKEN=your_cursor_api_token_here
-```
-
-### 3. Run Development Server
+### 2. Run Development Server
 
 ```bash
 pnpm dev
@@ -63,12 +53,26 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000) to view the dashboard.
 
+### 3. Configure Settings
+
+1. Click the **Settings** button (⚙️) in the top-right corner
+2. Set your **Cursor API token** (see below for how to get it)
+3. Toggle **theme** between light/dark mode as preferred
+4. Click **Save Changes**
+
 ## API Token Setup
 
-1. Visit [https://cursor.sh/settings/api](https://cursor.sh/settings/api)
-2. Sign in to your Cursor account
-3. Generate a new API token
-4. Add the token to your `.env.local` file
+Instead of environment variables, the app uses a built-in settings modal:
+
+1. Visit [https://cursor.com](https://cursor.com) in your browser
+2. Sign in with your Cursor account
+3. Open Developer Tools (F12) → Application/Storage → Cookies
+4. Find the `WorkosCursorSessionToken` cookie
+5. Copy its value and paste it into the settings modal
+
+The token is stored securely in your browser's local storage.
+
+See [ENV_CONFIG.md](./ENV_CONFIG.md) for alternative methods.
 
 ## Project Structure
 

@@ -1,8 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
+import { OnboardingModal } from "@/components/dashboard/onboarding-modal"
 import { SummaryCards, SecondaryMetrics } from "@/components/dashboard/summary-cards"
 import { ModelTable } from "@/components/dashboard/model-table"
+import { SettingsModal } from "@/components/dashboard/settings-modal"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { UsageAnalytics } from "@/lib/types"
@@ -13,8 +15,44 @@ export default function Dashboard() {
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
 	const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
+	const [apiToken, setApiToken] = useState<string>("")
 
-	const fetchAnalytics = async () => {
+	// Load token from localStorage on mount
+	useEffect(() => {
+		const storedToken = localStorage.getItem("cursor-api-token") || ""
+		setApiToken(storedToken)
+	}, [])
+
+	// Show onboarding modal if no token is set
+	const [showOnboarding, setShowOnboarding] = useState(false)
+
+	useEffect(() => {
+		if (!apiToken && !isLoading) {
+			setShowOnboarding(true)
+		}
+	}, [apiToken, isLoading])
+
+	// Handle token changes
+	const handleTokenChange = (newToken: string) => {
+		setApiToken(newToken)
+		setShowOnboarding(false)
+		if (typeof window !== "undefined") {
+			localStorage.setItem("cursor-api-token", newToken)
+		}
+	}
+
+	const handleOpenSettings = () => {
+		setShowOnboarding(false)
+		// Settings modal will be opened by the SettingsModal component
+	}
+
+	const fetchAnalytics = useCallback(async () => {
+		if (!apiToken) {
+			setError("Please set your Cursor API token in settings first.")
+			setIsLoading(false)
+			return
+		}
+
 		try {
 			setIsLoading(true)
 			setError(null)
@@ -34,11 +72,15 @@ export default function Dashboard() {
 		} finally {
 			setIsLoading(false)
 		}
-	}
+	}, [apiToken])
 
 	useEffect(() => {
-		fetchAnalytics()
-	}, [])
+		if (apiToken) {
+			fetchAnalytics()
+		} else {
+			setIsLoading(false)
+		}
+	}, [apiToken, fetchAnalytics])
 
 	const formatLastRefresh = (date: Date) => {
 		return date.toLocaleString("en-US", {
@@ -68,7 +110,13 @@ export default function Dashboard() {
 									Last updated: {formatLastRefresh(lastRefresh)}
 								</div>
 							)}
-							<Button onClick={fetchAnalytics} disabled={isLoading} variant="outline" size="sm">
+							<SettingsModal token={apiToken} onTokenChange={handleTokenChange} />
+							<Button
+								onClick={fetchAnalytics}
+								disabled={isLoading || !apiToken}
+								variant="outline"
+								size="sm"
+							>
 								<RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
 								Refresh
 							</Button>
@@ -115,6 +163,13 @@ export default function Dashboard() {
 					{analytics && <ModelTable models={analytics.models} isLoading={isLoading} />}
 				</div>
 			</main>
+
+			{/* Onboarding Modal */}
+			<OnboardingModal
+				isOpen={showOnboarding}
+				onTokenSubmit={handleTokenChange}
+				onOpenSettings={handleOpenSettings}
+			/>
 		</div>
 	)
 }

@@ -151,59 +151,60 @@ export function ModelTable({ models, isLoading = false }: ModelTableProps) {
 					</TableRow>
 				</TableHeader>
 				<TableBody>
-          {sortedModels.map((model, index) => {
-            const hasNoUsage = model.tokens === 0 && model.realApiCost === 0 && model.cursorCharges === 0
-            return (
-              <TableRow key={model.model} className={hasNoUsage ? "opacity-50" : ""}>
-                <TableCell>{index + 1}</TableCell>
-							<TableCell>
-								<div className="flex items-center gap-2">
-									<span className="font-medium">{model.model}</span>
-									<div className="flex gap-1">
-										{model.badges.map((badge) => (
-											<Badge key={badge} variant={getBadgeVariant(badge)} className="text-xs">
-												{badge}
-											</Badge>
-										))}
+					{sortedModels.map((model, index) => {
+						const hasNoUsage = model.tokens === 0 && model.realApiCost === 0 && model.cursorCharges === 0
+						return (
+							<TableRow key={model.model} className={hasNoUsage ? "opacity-50" : ""}>
+								<TableCell>{index + 1}</TableCell>
+								<TableCell>
+									<div className="flex items-center gap-2">
+										<span className="font-medium">{model.model}</span>
+										<div className="flex gap-1">
+											{model.badges.map((badge) => (
+												<Badge key={badge} variant={getBadgeVariant(badge)} className="text-xs">
+													{badge}
+												</Badge>
+											))}
+										</div>
 									</div>
-								</div>
-							</TableCell>
-							<TableCell>
-								<div className="text-sm">
-									<div>{(model.calls || 0).toLocaleString()}</div>
-									<div className="text-muted-foreground text-xs">
-										{model.paidCalls || 0} paid, {model.freeCalls || 0} free
+								</TableCell>
+								<TableCell>
+									<div className="text-sm">
+										<div>{(model.calls || 0).toLocaleString()}</div>
+										<div className="text-muted-foreground text-xs">
+											{model.paidCalls || 0} paid, {model.freeCalls || 0} free
+										</div>
 									</div>
-								</div>
-							</TableCell>
-							<TableCell>
-								<div className="text-sm">
-									<div>{formatNumber((model.tokens || 0) / 1000000, 1)}M</div>
-									<div className="text-muted-foreground text-xs">
-										{(model.tokens || 0).toLocaleString()} total
+								</TableCell>
+								<TableCell>
+									<div className="text-sm">
+										<div>{formatNumber((model.tokens || 0) / 1000000, 1)}M</div>
+										<div className="text-muted-foreground text-xs">
+											{(model.tokens || 0).toLocaleString()} total
+										</div>
 									</div>
-								</div>
-							</TableCell>
-							<TableCell>{formatCurrency(model.realApiCost || 0)}</TableCell>
-							<TableCell>{formatCurrency(model.cursorCharges || 0)}</TableCell>
-							<TableCell>{formatCurrency(model.yourCost || 0)}</TableCell>
-							<TableCell>
-								<div
-									className={cn(
-										"text-sm font-medium",
-										(model.savings || 0) > 0 ? "text-green-600" : "text-red-600"
-									)}
-								>
-									<div>{formatCurrency(model.savings || 0)}</div>
-									<div className="text-xs">
-										{(model.savingsPercentage || 0) > 0 ? "+" : ""}
-										{formatPercentage(model.savingsPercentage || 0)}
+								</TableCell>
+								<TableCell>{formatCurrency(model.realApiCost || 0)}</TableCell>
+								<TableCell>{formatCurrency(model.cursorCharges || 0)}</TableCell>
+								<TableCell>{formatCurrency(model.yourCost || 0)}</TableCell>
+								<TableCell>
+									<div
+										className={cn(
+											"text-sm font-medium",
+											(model.savings || 0) > 0 ? "text-green-600" : "text-red-600"
+										)}
+									>
+										<div>{formatCurrency(model.savings || 0)}</div>
+										<div className="text-xs">
+											{(model.savingsPercentage || 0) > 0 ? "+" : ""}
+											{formatPercentage(model.savingsPercentage || 0)}
+										</div>
 									</div>
-								</div>
-							</TableCell>
-            </TableRow>
-          )})}
-        </TableBody>
+								</TableCell>
+							</TableRow>
+						)
+					})}
+				</TableBody>
 			</Table>
 		</div>
 	)

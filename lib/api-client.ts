@@ -9,14 +9,22 @@ const DEFAULT_CONFIG: Partial<APIConfig> = {
 }
 
 /**
- * Gets API configuration from environment variables
+ * Gets API configuration from local storage
  */
 function getAPIConfig(): APIConfig {
-	const token = process.env.CURSOR_API_TOKEN
-	const baseUrl = process.env.CURSOR_API_BASE_URL || DEFAULT_CONFIG.baseUrl || "https://cursor.com"
+	// Check if we're on the client side
+	const isClient = typeof window !== "undefined"
+
+	// Get token from localStorage if on client, otherwise from env as fallback
+	let token = process.env.CURSOR_API_TOKEN
+	if (isClient) {
+		token = localStorage.getItem("cursor-api-token") || process.env.CURSOR_API_TOKEN
+	}
+
+	const baseUrl = DEFAULT_CONFIG.baseUrl || "https://cursor.com"
 
 	if (!token) {
-		throw new Error("CURSOR_API_TOKEN environment variable is required")
+		throw new Error("Cursor API token is required. Please set it in settings.")
 	}
 
 	return {
@@ -77,8 +85,7 @@ export async function fetchAllUsageEvents(): Promise<CursorUsageEvent[]> {
 	console.log("Full API Response:", JSON.stringify(response, null, 2))
 
 	// Try different possible field names for the events array
-	const events =
-		response.usageEventsDisplay || []
+	const events = response.usageEventsDisplay || []
 
 	console.log(`Found ${events.length} events`)
 	if (events.length > 0) {
