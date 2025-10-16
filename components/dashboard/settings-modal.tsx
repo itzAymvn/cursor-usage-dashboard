@@ -1,21 +1,21 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Settings, Moon, Sun } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
+import { Moon, Settings, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
+import { useEffect, useState } from "react"
 
 interface SettingsModalProps {
 	token: string
@@ -110,8 +110,7 @@ export function SettingsModal({
 				<DialogHeader>
 					<DialogTitle>Settings</DialogTitle>
 					<DialogDescription>
-						Configure your Cursor API token, theme preferences, and subscription plan. Billing cycle day is
-						automatically detected from your usage data.
+						Configure your Cursor API token, theme preferences, and subscription plan.
 					</DialogDescription>
 				</DialogHeader>
 				<div className="grid gap-6 py-4">
@@ -129,17 +128,6 @@ export function SettingsModal({
 							/>
 							<Moon className="h-4 w-4" />
 						</div>
-					</div>
-
-					{/* Auto Refresh Toggle */}
-					<div className="flex items-center justify-between">
-						<div className="space-y-0.5">
-							<Label className="text-base font-medium">Auto Refresh</Label>
-							<div className="text-sm text-muted-foreground">
-								Automatically refresh data at set intervals
-							</div>
-						</div>
-						<Switch checked={tempAutoRefreshEnabled} onCheckedChange={setTempAutoRefreshEnabled} />
 					</div>
 
 					{/* Auto Refresh Interval */}
