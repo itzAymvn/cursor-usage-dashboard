@@ -74,56 +74,60 @@ export function centsToDollars(cents: number): number {
  * Processes raw usage events into model metrics
  */
 export function processModelMetrics(events: CursorUsageEvent[]): ModelMetrics[] {
-	const modelMap = new Map<string, CursorUsageEvent[]>()
+	const modelMap = new Map<
+		string,
+		{
+			calls: number
+			tokens: number
+			realApiCostCents: number
+			cursorChargesCents: number
+			events: CursorUsageEvent[]
+		}
+	>()
 
-	// Group events by model
-	events.forEach((event) => {
-		const modelEvents = modelMap.get(event.model) || []
-		modelEvents.push(event)
-		modelMap.set(event.model, modelEvents)
-	})
+	// Single pass through events to accumulate all metrics
+	for (const event of events) {
+		const existing = modelMap.get(event.model) || {
+			calls: 0,
+			tokens: 0,
+			realApiCostCents: 0,
+			cursorChargesCents: 0,
+			events: [],
+		}
+
+		existing.calls++
+		existing.events.push(event)
+
+		if (event.tokenUsage) {
+			// Include all token types: input, output, cache read, cache write
+			const inputTokens = event.tokenUsage.inputTokens || 0
+			const outputTokens = event.tokenUsage.outputTokens || 0
+			const cacheReadTokens = event.tokenUsage.cacheReadTokens || 0
+			existing.tokens += inputTokens + outputTokens + cacheReadTokens
+
+			if (event.tokenUsage.totalCents) {
+				existing.realApiCostCents += event.tokenUsage.totalCents
+			}
+		}
+
+		// Cursor charges include token fees and request costs
+		const tokenFee = event.cursorTokenFee || 0
+		const requestCost = event.requestsCosts || 0
+		existing.cursorChargesCents += tokenFee + requestCost
+
+		modelMap.set(event.model, existing)
+	}
 
 	// Convert to ModelMetrics array
 	const models: ModelMetrics[] = []
 
-	for (const [modelName, modelEvents] of modelMap.entries()) {
-		const calls = modelEvents.length
-
-		// All calls are paid in Cursor's system
-		const paidCalls = calls
+	for (const [modelName, metrics] of modelMap.entries()) {
+		const calls = metrics.calls
+		const paidCalls = calls // All calls are paid in Cursor's system
 		const freeCalls = 0
-
-		const tokens = modelEvents.reduce((sum, event) => {
-			if (event.tokenUsage) {
-				// Include all token types: input, output, cache read, cache write
-				const inputTokens = event.tokenUsage.inputTokens || 0
-				const outputTokens = event.tokenUsage.outputTokens || 0
-				const cacheReadTokens = event.tokenUsage.cacheReadTokens || 0
-				return sum + inputTokens + outputTokens + cacheReadTokens
-			}
-			return sum
-		}, 0)
-
-		// Real API cost is the token usage cost
-		const realApiCost = centsToDollars(
-			modelEvents.reduce((sum, event) => {
-				if (event.tokenUsage && event.tokenUsage.totalCents) {
-					return sum + event.tokenUsage.totalCents
-				}
-				return sum
-			}, 0)
-		)
-
-		// Cursor charges include token fees and request costs
-		const cursorCharges = centsToDollars(
-			modelEvents.reduce((sum, event) => {
-				const tokenFee = event.cursorTokenFee || 0
-				const requestCost = event.requestsCosts || 0
-				return sum + tokenFee + requestCost
-			}, 0)
-		)
-
-		// Your cost is what you pay to Cursor
+		const tokens = metrics.tokens
+		const realApiCost = centsToDollars(metrics.realApiCostCents)
+		const cursorCharges = centsToDollars(metrics.cursorChargesCents)
 		const yourCost = cursorCharges
 
 		const savings = realApiCost - cursorCharges
@@ -156,41 +160,49 @@ export function processModelMetrics(events: CursorUsageEvent[]): ModelMetrics[] 
  * Calculates summary analytics from usage events
  */
 export function calculateSummary(events: CursorUsageEvent[]): AnalyticsSummary {
-	const totalTokens = events.reduce((sum, event) => {
+	let totalTokens = 0
+	let realApiCostCents = 0
+	let cursorChargesCents = 0
+	let anomalies = 0
+	const timestamps: number[] = []
+
+	// Single pass through events to calculate all metrics
+	for (const event of events) {
+		const timestamp = parseInt(event.timestamp)
+		if (!isNaN(timestamp)) {
+			timestamps.push(timestamp)
+		}
+
 		if (event.tokenUsage) {
 			const inputTokens = event.tokenUsage.inputTokens || 0
 			const outputTokens = event.tokenUsage.outputTokens || 0
 			const cacheReadTokens = event.tokenUsage.cacheReadTokens || 0
-			return sum + inputTokens + outputTokens + cacheReadTokens
-		}
-		return sum
-	}, 0)
-	const totalCalls = events.length
+			totalTokens += inputTokens + outputTokens + cacheReadTokens
 
-	const realApiCost = centsToDollars(
-		events.reduce((sum, event) => {
-			if (event.tokenUsage && event.tokenUsage.totalCents) {
-				return sum + event.tokenUsage.totalCents
+			if (event.tokenUsage.totalCents) {
+				realApiCostCents += event.tokenUsage.totalCents
 			}
-			return sum
-		}, 0)
-	)
 
-	const cursorCharges = centsToDollars(
-		events.reduce((sum, event) => {
-			const tokenFee = event.cursorTokenFee || 0
-			const requestCost = event.requestsCosts || 0
-			return sum + tokenFee + requestCost
-		}, 0)
-	)
+			// Anomalies detection (high usage models)
+			if (inputTokens + outputTokens > 10000) {
+				anomalies++
+			}
+		}
 
+		// Cursor charges include token fees and request costs
+		const tokenFee = event.cursorTokenFee || 0
+		const requestCost = event.requestsCosts || 0
+		cursorChargesCents += tokenFee + requestCost
+	}
+
+	const totalCalls = events.length
+	const realApiCost = centsToDollars(realApiCostCents)
+	const cursorCharges = centsToDollars(cursorChargesCents)
 	const yourCost = cursorCharges
-
 	const savings = realApiCost - cursorCharges
 	const savingsPercentage = realApiCost > 0 && !isNaN(realApiCost) ? (savings / realApiCost) * 100 : 0
 
-	// Calculate date range for daily averages (timestamp is milliseconds string)
-	const timestamps = events.map((e) => parseInt(e.timestamp)).filter((t) => !isNaN(t))
+	// Calculate date range for daily averages
 	const minDate = timestamps.length > 0 ? new Date(Math.min(...timestamps)) : new Date()
 	const maxDate = timestamps.length > 0 ? new Date(Math.max(...timestamps)) : new Date()
 	const daysDiff = Math.max(1, Math.ceil((maxDate.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24)))
@@ -200,14 +212,6 @@ export function calculateSummary(events: CursorUsageEvent[]): AnalyticsSummary {
 
 	// Simple trend calculation (placeholder - would need historical data)
 	const trend = 0 // percentage change
-
-	// Anomalies detection (high usage models)
-	const anomalies = events.filter((event) => {
-		if (event.tokenUsage) {
-			return event.tokenUsage.inputTokens + event.tokenUsage.outputTokens > 10000
-		}
-		return false
-	}).length
 
 	return {
 		totalTokens,

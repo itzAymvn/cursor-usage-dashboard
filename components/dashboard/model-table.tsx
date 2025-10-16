@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useCallback, memo } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -17,13 +17,13 @@ interface ModelTableProps {
 type SortField = keyof ModelMetrics
 type SortDirection = "asc" | "desc"
 
-export function ModelTable({ models, isLoading = false }: ModelTableProps) {
+export const ModelTable = memo(function ModelTable({ models, isLoading = false }: ModelTableProps) {
 	const [sortField, setSortField] = useState<SortField>("tokens")
 	const [sortDirection, setSortDirection] = useState<SortDirection>("desc")
 
-	// Sort models directly
-	const sortedModels = useMemo(() => {
-		return [...models].sort((a, b) => {
+	// Memoize sort function to avoid recreating it on every render
+	const sortFunction = useCallback(
+		(a: ModelMetrics, b: ModelMetrics) => {
 			const aVal = a[sortField]
 			const bVal = b[sortField]
 
@@ -34,26 +34,38 @@ export function ModelTable({ models, isLoading = false }: ModelTableProps) {
 			const aStr = String(aVal).toLowerCase()
 			const bStr = String(bVal).toLowerCase()
 			return sortDirection === "asc" ? aStr.localeCompare(bStr) : bStr.localeCompare(aStr)
+		},
+		[sortField, sortDirection]
+	)
+
+	// Sort models - only recreate sorted array when necessary
+	const sortedModels = useMemo(() => {
+		return [...models].sort(sortFunction)
+	}, [models, sortFunction])
+
+	const handleSort = useCallback((field: SortField) => {
+		setSortField((currentField) => {
+			if (currentField === field) {
+				setSortDirection((currentDirection) => (currentDirection === "asc" ? "desc" : "asc"))
+				return currentField
+			} else {
+				setSortDirection("desc")
+				return field
+			}
 		})
-	}, [models, sortField, sortDirection])
+	}, [])
 
-	const handleSort = (field: SortField) => {
-		if (sortField === field) {
-			setSortDirection(sortDirection === "asc" ? "desc" : "asc")
-		} else {
-			setSortField(field)
-			setSortDirection("desc")
-		}
-	}
+	const getSortIcon = useCallback(
+		(field: SortField) => {
+			if (sortField !== field) {
+				return <ArrowUpDown className="h-4 w-4" />
+			}
+			return sortDirection === "asc" ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+		},
+		[sortField, sortDirection]
+	)
 
-	const getSortIcon = (field: SortField) => {
-		if (sortField !== field) {
-			return <ArrowUpDown className="h-4 w-4" />
-		}
-		return sortDirection === "asc" ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
-	}
-
-	const getBadgeVariant = (badge: string) => {
+	const getBadgeVariant = useCallback((badge: string) => {
 		switch (badge) {
 			case "MIXED":
 				return "secondary"
@@ -66,7 +78,7 @@ export function ModelTable({ models, isLoading = false }: ModelTableProps) {
 			default:
 				return "outline"
 		}
-	}
+	}, [])
 
 	if (isLoading) {
 		return (
@@ -208,4 +220,4 @@ export function ModelTable({ models, isLoading = false }: ModelTableProps) {
 			</Table>
 		</div>
 	)
-}
+})

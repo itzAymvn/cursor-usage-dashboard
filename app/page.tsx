@@ -126,32 +126,34 @@ export default function Dashboard() {
 		}
 	}, [apiToken, fetchAnalytics])
 
-	// Auto-refresh effect
+	// Auto-refresh effect - optimized to reduce re-renders
 	useEffect(() => {
 		let intervalId: NodeJS.Timeout | null = null
 		let countdownId: NodeJS.Timeout | null = null
+		let nextRefreshTime: number | null = null
 
 		if (autoRefreshEnabled && apiToken) {
-			// Set initial countdown
+			// Set initial countdown and next refresh time
+			const now = Date.now()
+			nextRefreshTime = now + autoRefreshInterval * 1000
 			setCountdown(autoRefreshInterval)
 
-			// Countdown timer (updates every second)
+			// Countdown timer (updates every 5 seconds to reduce re-renders)
 			countdownId = setInterval(() => {
-				setCountdown((prev) => {
-					if (prev === null || prev <= 1) {
-						return autoRefreshInterval
-					}
-					return prev - 1
-				})
-			}, 1000)
+				const remaining = nextRefreshTime ? Math.ceil((nextRefreshTime - Date.now()) / 1000) : 0
+				setCountdown(remaining > 0 ? remaining : autoRefreshInterval)
+			}, 5000) // Update every 5 seconds instead of every second
 
-			// Refresh interval (uses configurable interval in seconds)
+			// Refresh interval
 			intervalId = setInterval(() => {
 				fetchAnalytics()
+				const now = Date.now()
+				nextRefreshTime = now + autoRefreshInterval * 1000
 				setCountdown(autoRefreshInterval) // Reset countdown after refresh
 			}, autoRefreshInterval * 1000)
 		} else {
 			setCountdown(null)
+			nextRefreshTime = null
 		}
 
 		return () => {
@@ -164,7 +166,7 @@ export default function Dashboard() {
 		}
 	}, [autoRefreshEnabled, apiToken, autoRefreshInterval, fetchAnalytics])
 
-	const formatLastRefresh = (date: Date) => {
+	const formatLastRefresh = useCallback((date: Date) => {
 		return date.toLocaleString("en-US", {
 			month: "short",
 			day: "numeric",
@@ -172,7 +174,7 @@ export default function Dashboard() {
 			minute: "2-digit",
 			second: "2-digit",
 		})
-	}
+	}, [])
 
 	return (
 		<div className="min-h-screen bg-background">

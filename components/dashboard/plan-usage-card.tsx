@@ -1,11 +1,11 @@
 "use client"
 
-import { useMemo } from "react"
-import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { AnalyticsSummary } from "@/lib/types"
+import { Progress } from "@/components/ui/progress"
 import { formatCurrency } from "@/lib/analytics"
-import { TrendingUp, Calendar, Clock } from "lucide-react"
+import { AnalyticsSummary } from "@/lib/types"
+import { Calendar, Clock } from "lucide-react"
+import { useMemo } from "react"
 
 interface PlanUsageCardProps {
 	summary: AnalyticsSummary

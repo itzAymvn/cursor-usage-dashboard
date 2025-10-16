@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatCurrency } from "@/lib/analytics"
 import { CursorUsageEvent, EventKind } from "@/lib/types"
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react"
-import { useMemo, useState } from "react"
+import { useMemo, useState, useCallback, memo } from "react"
 
 interface RequestsTableProps {
 	requests: CursorUsageEvent[]
@@ -15,16 +15,17 @@ interface RequestsTableProps {
 }
 
 type SortField = keyof CursorUsageEvent | "totalTokens" | "cost"
+type StringSortField = "timestamp" | "model" | "kind"
 type SortDirection = "asc" | "desc"
 
-export function RequestsTable({ requests, isLoading = false }: RequestsTableProps) {
+export const RequestsTable = memo(function RequestsTable({ requests, isLoading = false }: RequestsTableProps) {
 	const [sortField, setSortField] = useState<SortField>("timestamp")
 	const [sortDirection, setSortDirection] = useState<SortDirection>("desc")
 
-	// Sort requests
-	const sortedRequests = useMemo(() => {
-		return [...requests].sort((a, b) => {
-			let aVal: any, bVal: any
+	// Memoize sort function to avoid recreating it on every render
+	const sortFunction = useCallback(
+		(a: CursorUsageEvent, b: CursorUsageEvent) => {
+			let aVal: string | number, bVal: string | number
 
 			switch (sortField) {
 				case "totalTokens":
@@ -42,8 +43,9 @@ export function RequestsTable({ requests, isLoading = false }: RequestsTableProp
 					bVal = b.tokenUsage?.totalCents ? b.tokenUsage.totalCents / 100 : b.requestsCosts || 0
 					break
 				default:
-					aVal = a[sortField]
-					bVal = b[sortField]
+					// Default case handles string fields: timestamp, model, kind
+					aVal = a[sortField as StringSortField]
+					bVal = b[sortField as StringSortField]
 			}
 
 			if (typeof aVal === "number" && typeof bVal === "number") {
@@ -53,45 +55,58 @@ export function RequestsTable({ requests, isLoading = false }: RequestsTableProp
 			const aStr = String(aVal).toLowerCase()
 			const bStr = String(bVal).toLowerCase()
 			return sortDirection === "asc" ? aStr.localeCompare(bStr) : bStr.localeCompare(aStr)
+		},
+		[sortField, sortDirection]
+	)
+
+	// Sort requests - only recreate sorted array when necessary
+	const sortedRequests = useMemo(() => {
+		return [...requests].sort(sortFunction)
+	}, [requests, sortFunction])
+
+	const handleSort = useCallback((field: SortField) => {
+		setSortField((currentField) => {
+			if (currentField === field) {
+				setSortDirection((currentDirection) => (currentDirection === "asc" ? "desc" : "asc"))
+				return currentField
+			} else {
+				setSortDirection("desc")
+				return field
+			}
 		})
-	}, [requests, sortField, sortDirection])
+	}, [])
 
-	const handleSort = (field: SortField) => {
-		if (sortField === field) {
-			setSortDirection(sortDirection === "asc" ? "desc" : "asc")
-		} else {
-			setSortField(field)
-			setSortDirection("desc")
-		}
-	}
+	const getSortIcon = useCallback(
+		(field: SortField) => {
+			if (sortField !== field) {
+				return <ArrowUpDown className="h-4 w-4" />
+			}
+			return sortDirection === "asc" ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+		},
+		[sortField, sortDirection]
+	)
 
-	const getSortIcon = (field: SortField) => {
-		if (sortField !== field) {
-			return <ArrowUpDown className="h-4 w-4" />
-		}
-		return sortDirection === "asc" ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
-	}
-
-	const formatTimestamp = (timestamp: string) => {
+	// Memoize date formatter to avoid parsing dates on every render
+	const formatTimestamp = useCallback((timestamp: string) => {
 		const date = new Date(parseInt(timestamp))
 		return date.toLocaleString()
-	}
+	}, [])
 
-	const getTotalTokens = (event: CursorUsageEvent) => {
+	const getTotalTokens = useCallback((event: CursorUsageEvent) => {
 		if (!event.tokenUsage) return 0
 		return (
 			(event.tokenUsage.inputTokens || 0) +
 			(event.tokenUsage.outputTokens || 0) +
 			(event.tokenUsage.cacheReadTokens || 0)
 		)
-	}
+	}, [])
 
-	const getCost = (event: CursorUsageEvent) => {
+	const getCost = useCallback((event: CursorUsageEvent) => {
 		if (event.tokenUsage?.totalCents) {
 			return event.tokenUsage.totalCents / 100
 		}
 		return event.requestsCosts || 0
-	}
+	}, [])
 
 	if (isLoading) {
 		return (
@@ -201,7 +216,7 @@ export function RequestsTable({ requests, isLoading = false }: RequestsTableProp
 									{EventKind[request.kind as keyof typeof EventKind] || EventKind.DEFAULT_EVENT_KIND}
 								</Badge>
 							</TableCell>
-							<TableCell className="font-mono text-right">
+							<TableCell className="font-mono">
 								{request.tokenUsage ? (
 									<Popover>
 										<PopoverTrigger asChild>
@@ -262,4 +277,4 @@ export function RequestsTable({ requests, isLoading = false }: RequestsTableProp
 			</Table>
 		</div>
 	)
-}
+})
