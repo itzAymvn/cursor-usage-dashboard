@@ -10,6 +10,7 @@ import { PlanUsageCard } from "@/components/dashboard/plan-usage-card"
 import { ModelUsagePieChart } from "@/components/dashboard/charts/model-usage-pie-chart"
 import { CostBreakdownBarChart } from "@/components/dashboard/charts/cost-breakdown-bar-chart"
 import { TokenUsageBarChart } from "@/components/dashboard/charts/token-usage-bar-chart"
+import { TokenUsageOverTimeChart } from "@/components/dashboard/charts/token-usage-over-time-chart"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { UsageAnalytics } from "@/lib/types"
@@ -296,6 +297,11 @@ export default function Dashboard() {
 						<h2 className="text-2xl font-semibold tracking-tight">Usage Analytics</h2>
 						<p className="text-muted-foreground">Visual breakdown of your AI model usage patterns</p>
 					</div>
+
+					{/* Time-based chart - full width */}
+					{analytics && <TokenUsageOverTimeChart events={analytics.requests} isLoading={isLoading} />}
+
+					{/* Model comparison charts */}
 					<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
 						{analytics && (
 							<>
