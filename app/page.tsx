@@ -200,17 +200,34 @@ export default function Dashboard() {
 		<div className="min-h-screen bg-background">
 			{/* Header */}
 			<header className="border-b bg-card">
-				<div className="container mx-auto px-4 py-6">
-					<div className="flex items-center justify-between">
-						<div>
-							<h1 className="text-3xl font-bold tracking-tight">Cursor Usage Analytics</h1>
-							<p className="text-muted-foreground mt-2">
+				<div className="container mx-auto px-4 py-4 md:py-6">
+					<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+						<div className="flex-1 min-w-0">
+							<h1 className="text-2xl md:text-3xl font-bold tracking-tight">Cursor Usage Analytics</h1>
+							<p className="text-muted-foreground mt-1 md:mt-2 text-sm md:text-base">
 								Real-time usage metrics, costs, and insights across AI models
 							</p>
-						</div>
-						<div className="flex items-center gap-4">
+							{/* Mobile: Show refresh status below title */}
 							{lastRefresh && (
-								<div className="flex flex-col gap-1">
+								<div className="mt-2 md:hidden">
+									<div className="text-xs text-muted-foreground">
+										Last updated: {formatLastRefresh(lastRefresh)}
+									</div>
+									{autoRefreshEnabled && countdown !== null && (
+										<div className="flex items-center gap-1 text-green-600 dark:text-green-400 mt-1">
+											<RotateCcw className="h-3 w-3 animate-spin" />
+											<span className="text-xs font-medium">
+												Next refresh: {countdown > 0 ? `${countdown}s` : "Refreshing..."}
+											</span>
+										</div>
+									)}
+								</div>
+							)}
+						</div>
+						<div className="flex items-center justify-between md:justify-end gap-2 md:gap-4">
+							{/* Desktop: Show refresh status */}
+							{lastRefresh && (
+								<div className="hidden md:flex flex-col gap-1">
 									<div className="text-sm text-muted-foreground">
 										Last updated: {formatLastRefresh(lastRefresh)}
 									</div>
@@ -236,27 +253,38 @@ export default function Dashboard() {
 								onAutoRefreshChange={handleAutoRefreshChange}
 								onAutoRefreshIntervalChange={handleAutoRefreshIntervalChange}
 							/>
-							<div className="flex items-center gap-2">
+							<div className="flex items-center gap-1 md:gap-2">
 								<Button
 									onClick={() => fetchAnalytics(false)}
 									disabled={isLoading || isRefreshing || !apiToken}
 									variant="outline"
 									size="sm"
+									className="text-xs md:text-sm"
 								>
 									<RefreshCw
-										className={`h-4 w-4 mr-2 ${isLoading || isRefreshing ? "animate-spin" : ""}`}
+										className={`h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 ${
+											isLoading || isRefreshing ? "animate-spin" : ""
+										}`}
 									/>
-									Refresh
+									<span className="hidden xs:inline">Refresh</span>
+									<span className="xs:hidden">↻</span>
 								</Button>
 								<Button
 									onClick={() => handleAutoRefreshChange(!autoRefreshEnabled)}
 									disabled={!apiToken}
 									variant={autoRefreshEnabled ? "default" : "outline"}
 									size="sm"
-									className={autoRefreshEnabled ? "bg-green-600 hover:bg-green-700" : ""}
+									className={`text-xs md:text-sm ${
+										autoRefreshEnabled ? "bg-green-600 hover:bg-green-700" : ""
+									}`}
 								>
-									<RotateCcw className={`h-4 w-4 mr-2 ${autoRefreshEnabled ? "animate-spin" : ""}`} />
-									Auto
+									<RotateCcw
+										className={`h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 ${
+											autoRefreshEnabled ? "animate-spin" : ""
+										}`}
+									/>
+									<span className="hidden xs:inline">Auto</span>
+									<span className="xs:hidden">⟳</span>
 								</Button>
 							</div>
 						</div>
@@ -265,7 +293,7 @@ export default function Dashboard() {
 			</header>
 
 			{/* Main Content */}
-			<main className="container mx-auto px-4 py-8 space-y-8">
+			<main className="container mx-auto px-4 py-4 md:py-8 space-y-6 md:space-y-8">
 				{/* Error Alert */}
 				{error && (
 					<Alert variant="destructive">
@@ -294,24 +322,26 @@ export default function Dashboard() {
 				{/* Charts */}
 				<div className="space-y-6">
 					<div>
-						<h2 className="text-2xl font-semibold tracking-tight">Usage Analytics</h2>
-						<p className="text-muted-foreground">Visual breakdown of your AI model usage patterns</p>
+						<h2 className="text-xl sm:text-2xl font-semibold tracking-tight">Usage Analytics</h2>
+						<p className="text-muted-foreground text-sm sm:text-base">
+							Visual breakdown of your AI model usage patterns
+						</p>
 					</div>
 
 					{/* Time-based chart - full width */}
 					{analytics && <TokenUsageOverTimeChart events={analytics.requests} isLoading={isLoading} />}
 
 					{/* Model comparison charts */}
-					<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+					<div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
 						{analytics && (
 							<>
-								<div className="md:col-span-2 lg:col-span-1">
+								<div className="sm:col-span-2 lg:col-span-1">
 									<ModelUsagePieChart models={analytics.models} isLoading={isLoading} />
 								</div>
-								<div className="md:col-span-2 lg:col-span-1">
+								<div className="sm:col-span-2 lg:col-span-1">
 									<TokenUsageBarChart models={analytics.models} isLoading={isLoading} />
 								</div>
-								<div className="md:col-span-2 lg:col-span-1">
+								<div className="sm:col-span-2 lg:col-span-1">
 									<CostBreakdownBarChart models={analytics.models} isLoading={isLoading} />
 								</div>
 							</>
@@ -323,8 +353,10 @@ export default function Dashboard() {
 				{analytics && (
 					<div className="space-y-4">
 						<div>
-							<h2 className="text-2xl font-semibold tracking-tight">Plan Usage</h2>
-							<p className="text-muted-foreground">Track your current usage against plan limits</p>
+							<h2 className="text-xl sm:text-2xl font-semibold tracking-tight">Plan Usage</h2>
+							<p className="text-muted-foreground text-sm sm:text-base">
+								Track your current usage against plan limits
+							</p>
 						</div>
 						<div className="max-w-md">
 							<PlanUsageCard
@@ -340,33 +372,37 @@ export default function Dashboard() {
 
 				{/* Data Table */}
 				<div className="space-y-4">
-					<div className="flex items-center justify-between">
+					<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 						<div>
-							<h2 className="text-2xl font-semibold tracking-tight">
+							<h2 className="text-xl sm:text-2xl font-semibold tracking-tight">
 								{currentView === "models" ? "Model Breakdown" : "All Requests"}
 							</h2>
-							<p className="text-muted-foreground">
+							<p className="text-muted-foreground text-sm sm:text-base">
 								{currentView === "models"
 									? "Detailed usage statistics by AI model family"
 									: "Individual API requests with full details"}
 							</p>
 						</div>
-						<div className="flex items-center gap-2">
+						<div className="flex items-center gap-2 self-start sm:self-auto">
 							<Button
 								onClick={() => setCurrentView("models")}
 								variant={currentView === "models" ? "default" : "outline"}
 								size="sm"
+								className="text-xs sm:text-sm"
 							>
-								<Table className="h-4 w-4 mr-2" />
-								Models
+								<Table className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+								<span className="hidden xs:inline">Models</span>
+								<span className="xs:hidden">Models</span>
 							</Button>
 							<Button
 								onClick={() => setCurrentView("requests")}
 								variant={currentView === "requests" ? "default" : "outline"}
 								size="sm"
+								className="text-xs sm:text-sm"
 							>
-								<List className="h-4 w-4 mr-2" />
-								Requests
+								<List className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+								<span className="hidden xs:inline">Requests</span>
+								<span className="xs:hidden">Req</span>
 							</Button>
 						</div>
 					</div>

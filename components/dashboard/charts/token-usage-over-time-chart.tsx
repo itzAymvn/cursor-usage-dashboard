@@ -149,25 +149,27 @@ export const TokenUsageOverTimeChart = memo(function TokenUsageOverTimeChart({
 	return (
 		<Card>
 			<CardHeader>
-				<div className="flex items-center justify-between">
+				<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 					<div>
-						<CardTitle>Token Usage Over Time</CardTitle>
+						<CardTitle className="text-lg sm:text-xl">Token Usage Over Time</CardTitle>
 						<p className="text-sm text-muted-foreground">Track token consumption patterns over time</p>
 					</div>
-					<div className="flex gap-2">
+					<div className="flex gap-1 overflow-x-auto pb-1 sm:pb-0">
 						{[
-							{ key: "hourly", label: "Hourly" },
-							{ key: "daily", label: "Daily" },
-							{ key: "weekly", label: "Weekly" },
-							{ key: "monthly", label: "Monthly" },
-						].map(({ key, label }) => (
+							{ key: "hourly", label: "Hourly", short: "1H" },
+							{ key: "daily", label: "Daily", short: "1D" },
+							{ key: "weekly", label: "Weekly", short: "1W" },
+							{ key: "monthly", label: "Monthly", short: "1M" },
+						].map(({ key, label, short }) => (
 							<Button
 								key={key}
 								variant={selectedPeriod === key ? "default" : "outline"}
 								size="sm"
 								onClick={() => setSelectedPeriod(key as TimePeriod)}
+								className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3"
 							>
-								{label}
+								<span className="hidden xs:inline">{label}</span>
+								<span className="xs:hidden">{short}</span>
 							</Button>
 						))}
 					</div>
