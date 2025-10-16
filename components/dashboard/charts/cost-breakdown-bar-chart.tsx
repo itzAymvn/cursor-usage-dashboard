@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ModelMetrics } from "@/lib/types"
+import { ChartTooltipProps } from "@/lib/chart-types"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { memo, useMemo } from "react"
 
@@ -29,15 +30,17 @@ export const CostBreakdownBarChart = memo(function CostBreakdownBarChart({
 		}))
 	}, [models])
 
-	const CustomTooltip = ({ active, payload, label }: any) => {
+	const CustomTooltip = ({ active, payload }: ChartTooltipProps) => {
 		if (active && payload && payload.length) {
-			const data = payload[0].payload
+			const data = payload[0].payload as Record<string, string | number>
 			return (
 				<div className="bg-background border border-border rounded-lg p-3 shadow-md">
-					<p className="font-medium">{data.fullModel}</p>
-					<p className="text-sm text-muted-foreground">Your Cost: ${data.yourCost.toFixed(2)}</p>
-					<p className="text-sm text-muted-foreground">Real API Cost: ${data.realApiCost.toFixed(2)}</p>
-					<p className="text-sm text-green-600">Savings: ${data.savings.toFixed(2)}</p>
+					<p className="font-medium">{String(data.fullModel)}</p>
+					<p className="text-sm text-muted-foreground">Your Cost: ${Number(data.yourCost).toFixed(2)}</p>
+					<p className="text-sm text-muted-foreground">
+						Real API Cost: ${Number(data.realApiCost).toFixed(2)}
+					</p>
+					<p className="text-sm text-green-600">Savings: ${Number(data.savings).toFixed(2)}</p>
 				</div>
 			)
 		}
@@ -90,7 +93,7 @@ export const CostBreakdownBarChart = memo(function CostBreakdownBarChart({
 								fontSize={12}
 								interval={0}
 							/>
-							<YAxis fontSize={12} tickFormatter={(value) => `$${value.toFixed(0)}`} />
+							<YAxis fontSize={12} tickFormatter={(value: number) => `$${value.toFixed(0)}`} />
 							<Tooltip content={<CustomTooltip />} />
 							<Bar dataKey="yourCost" fill="#0088FE" name="Your Cost" radius={[2, 2, 0, 0]} />
 						</BarChart>

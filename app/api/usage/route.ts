@@ -39,8 +39,18 @@ export async function GET(request: Request) {
 		// Process events into analytics data
 		const analytics: UsageAnalytics = processUsageAnalytics(events)
 
-		// Return processed analytics
-		return NextResponse.json(analytics)
+		// Return processed analytics with cache headers
+		return NextResponse.json(analytics, {
+			headers: {
+				// Cache for 60 seconds, allow stale responses for 5 minutes
+				"Cache-Control": "public, max-age=60, s-maxage=60, stale-while-revalidate=300",
+				// CDN cache configuration
+				"CDN-Cache-Control": "max-age=60",
+				// Allow CORS for client-side requests
+				"Access-Control-Allow-Origin": "*",
+				"Access-Control-Allow-Methods": "GET, OPTIONS",
+			},
+		})
 	} catch (error) {
 		console.error("API route error:", error)
 
@@ -98,7 +108,7 @@ export async function OPTIONS() {
 		headers: {
 			"Access-Control-Allow-Origin": "*",
 			"Access-Control-Allow-Methods": "GET, OPTIONS",
-			"Access-Control-Allow-Headers": "Content-Type",
+			"Access-Control-Allow-Headers": "Content-Type, Authorization",
 		},
 	})
 }

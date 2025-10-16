@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ModelMetrics } from "@/lib/types"
+import { ChartTooltipProps } from "@/lib/chart-types"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { memo, useMemo } from "react"
 
@@ -30,17 +31,17 @@ export const TokenUsageBarChart = memo(function TokenUsageBarChart({
 		}))
 	}, [models])
 
-	const CustomTooltip = ({ active, payload, label }: any) => {
+	const CustomTooltip = ({ active, payload }: ChartTooltipProps) => {
 		if (active && payload && payload.length) {
-			const data = payload[0].payload
+			const data = payload[0].payload as Record<string, string | number>
 			return (
 				<div className="bg-background border border-border rounded-lg p-3 shadow-md">
-					<p className="font-medium">{data.fullModel}</p>
+					<p className="font-medium">{String(data.fullModel)}</p>
 					<p className="text-sm text-muted-foreground">
-						Tokens: {data.rawTokens.toLocaleString()} ({data.tokens.toFixed(2)}M)
+						Tokens: {Number(data.rawTokens).toLocaleString()} ({Number(data.tokens).toFixed(2)}M)
 					</p>
-					<p className="text-sm text-muted-foreground">Calls: {data.calls.toLocaleString()}</p>
-					<p className="text-sm text-muted-foreground">Cost: ${data.cost.toFixed(2)}</p>
+					<p className="text-sm text-muted-foreground">Calls: {Number(data.calls).toLocaleString()}</p>
+					<p className="text-sm text-muted-foreground">Cost: ${Number(data.cost).toFixed(2)}</p>
 				</div>
 			)
 		}
@@ -96,7 +97,7 @@ export const TokenUsageBarChart = memo(function TokenUsageBarChart({
 								fontSize={12}
 								interval={0}
 							/>
-							<YAxis fontSize={12} tickFormatter={(value) => `${value.toFixed(1)}M`} />
+							<YAxis fontSize={12} tickFormatter={(value: number) => `${value.toFixed(1)}M`} />
 							<Tooltip content={<CustomTooltip />} />
 							<Bar dataKey="tokens" fill="#00C49F" name="Tokens (M)" radius={[2, 2, 0, 0]} />
 						</BarChart>

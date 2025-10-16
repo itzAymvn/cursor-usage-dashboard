@@ -1,10 +1,11 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ChartTooltipProps } from "@/lib/chart-types"
 import { CursorUsageEvent } from "@/lib/types"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
 import { memo, useMemo, useState } from "react"
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 
 type TimePeriod = "hourly" | "daily" | "weekly" | "monthly"
 
@@ -93,16 +94,17 @@ export const TokenUsageOverTimeChart = memo(function TokenUsageOverTimeChart({
 		return data
 	}, [events, selectedPeriod])
 
-	const CustomTooltip = ({ active, payload, label }: any) => {
+	const CustomTooltip = ({ active, payload }: ChartTooltipProps) => {
 		if (active && payload && payload.length) {
-			const data = payload[0].payload
+			const data = payload[0].payload as Record<string, string | number>
 			return (
 				<div className="bg-background border border-border rounded-lg p-3 shadow-md">
-					<p className="font-medium">{label}</p>
+					<p className="font-medium">{String(data.time)}</p>
 					<p className="text-sm text-muted-foreground">
-						Total: {(data.rawTotalTokens || 0).toLocaleString()} tokens ({data.totalTokens?.toFixed(2)}M)
+						Total: {Number(data.rawTotalTokens || 0).toLocaleString()} tokens (
+						{Number(data.totalTokens)?.toFixed(2)}M)
 					</p>
-					<p className="text-sm text-muted-foreground">Requests: {data.requests}</p>
+					<p className="text-sm text-muted-foreground">Requests: {Number(data.requests)}</p>
 				</div>
 			)
 		}
@@ -181,9 +183,9 @@ export const TokenUsageOverTimeChart = memo(function TokenUsageOverTimeChart({
 						<LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
 							<CartesianGrid strokeDasharray="3 3" className="opacity-30" />
 							<XAxis dataKey="time" tickFormatter={formatXAxisLabel} fontSize={12} />
-							<YAxis fontSize={12} tickFormatter={(value) => `${value.toFixed(1)}M`} />
+							<YAxis fontSize={12} tickFormatter={(value: number) => `${value.toFixed(1)}M`} />
 							<Tooltip content={<CustomTooltip />} />
-							<Legend />
+							{/* <Legend /> */}
 							<Line
 								type="monotone"
 								dataKey="totalTokens"

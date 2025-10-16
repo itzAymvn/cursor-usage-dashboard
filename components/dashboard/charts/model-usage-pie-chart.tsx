@@ -2,7 +2,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ModelMetrics } from "@/lib/types"
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts"
+import { ChartTooltipProps } from "@/lib/chart-types"
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
 import { memo, useMemo } from "react"
 
 interface ModelUsagePieChartProps {
@@ -61,15 +62,17 @@ export const ModelUsagePieChart = memo(function ModelUsagePieChart({
 		return data
 	}, [models])
 
-	const CustomTooltip = ({ active, payload }: any) => {
+	const CustomTooltip = ({ active, payload }: ChartTooltipProps) => {
 		if (active && payload && payload.length) {
-			const data = payload[0].payload
+			const data = payload[0].payload as Record<string, string | number>
 			return (
 				<div className="bg-background border border-border rounded-lg p-3 shadow-md">
-					<p className="font-medium">{data.name}</p>
-					<p className="text-sm text-muted-foreground">Tokens: {(data.value / 1000000).toFixed(2)}M</p>
-					<p className="text-sm text-muted-foreground">Calls: {data.calls.toLocaleString()}</p>
-					<p className="text-sm text-muted-foreground">Cost: ${data.cost.toFixed(2)}</p>
+					<p className="font-medium">{String(data.name)}</p>
+					<p className="text-sm text-muted-foreground">
+						Tokens: {(Number(data.value) / 1000000).toFixed(2)}M
+					</p>
+					<p className="text-sm text-muted-foreground">Calls: {Number(data.calls).toLocaleString()}</p>
+					<p className="text-sm text-muted-foreground">Cost: ${Number(data.cost).toFixed(2)}</p>
 				</div>
 			)
 		}
@@ -115,7 +118,7 @@ export const ModelUsagePieChart = memo(function ModelUsagePieChart({
 								))}
 							</Pie>
 							<Tooltip content={<CustomTooltip />} />
-							<Legend wrapperStyle={{ fontSize: "12px" }} iconType="circle" />
+							{/* Legend omitted due to TypeScript compatibility issue with recharts */}
 						</PieChart>
 					</ResponsiveContainer>
 				</div>
