@@ -93,3 +93,12 @@ export interface EnvConfig {
 	CURSOR_API_TOKEN: string
 	CURSOR_API_BASE_URL?: string
 }
+
+export enum EventKind {
+	USAGE_EVENT_KIND_INCLUDED_IN_PRO = "Included in Pro",
+	USAGE_EVENT_KIND_INCLUDED_IN_PRO_PLUS = "Included in Pro+",
+	USAGE_EVENT_KIND_INCLUDED_IN_ULTRA = "Included in Ultra",
+	USAGE_EVENT_KIND_USER_API_KEY = "User API Key",
+	USAGE_EVENT_KIND_ERRORED_NOT_CHARGED = "Errored, not charged",
+    DEFAULT_EVENT_KIND = "Unknown",
+}

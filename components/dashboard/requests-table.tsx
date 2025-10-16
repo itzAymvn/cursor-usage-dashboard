@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { formatCurrency } from "@/lib/analytics"
-import { CursorUsageEvent } from "@/lib/types"
+import { CursorUsageEvent, EventKind } from "@/lib/types"
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react"
 import { useMemo, useState } from "react"
 
@@ -198,7 +198,7 @@ export function RequestsTable({ requests, isLoading = false }: RequestsTableProp
 							</TableCell>
 							<TableCell>
 								<Badge variant="outline" className="text-xs">
-									{request.kind}
+									{EventKind[request.kind as keyof typeof EventKind] || EventKind.DEFAULT_EVENT_KIND}
 								</Badge>
 							</TableCell>
 							<TableCell className="font-mono text-right">
