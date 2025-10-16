@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server"
-import { fetchAllUsageEvents, validateEnvironment } from "@/lib/api-client"
 import { processUsageAnalytics } from "@/lib/analytics"
+import { fetchAllUsageEvents } from "@/lib/api-client"
 import { UsageAnalytics } from "@/lib/types"
+import { NextResponse } from "next/server"
 
 /**
  * GET /api/usage
@@ -9,24 +9,8 @@ import { UsageAnalytics } from "@/lib/types"
  */
 export async function GET() {
 	try {
-		// Validate environment configuration
-		const envValidation = validateEnvironment()
-		if (!envValidation.valid) {
-			return NextResponse.json(
-				{
-					error: "Configuration Error",
-					message: "API token not configured",
-					details: envValidation.errors,
-				},
-				{ status: 500 }
-			)
-		}
-
 		// Fetch all usage events from Cursor API
-		console.log("Fetching usage events from Cursor API...")
 		const events = await fetchAllUsageEvents()
-		console.log(`Fetched ${events.length} events`)
-		console.log("Sample event:", JSON.stringify(events[0], null, 2))
 
 		if (events.length === 0) {
 			return NextResponse.json(
@@ -39,7 +23,6 @@ export async function GET() {
 		}
 
 		// Process events into analytics data
-		console.log(`Processing ${events.length} usage events...`)
 		const analytics: UsageAnalytics = processUsageAnalytics(events)
 
 		// Return processed analytics

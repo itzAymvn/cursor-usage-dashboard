@@ -76,18 +76,6 @@ export function centsToDollars(cents: number): number {
 export function processModelMetrics(events: CursorUsageEvent[]): ModelMetrics[] {
 	const modelMap = new Map<string, CursorUsageEvent[]>()
 
-	// Debug: Log first few events to see data structure
-	if (events.length > 0) {
-		console.log("First event sample:", JSON.stringify(events[0], null, 2))
-		console.log("Token usage check:", events[0].tokenUsage)
-		if (events[0].tokenUsage) {
-			console.log("Token usage keys:", Object.keys(events[0].tokenUsage))
-			console.log("Token usage values:", events[0].tokenUsage)
-		} else {
-			console.log("No tokenUsage field in event")
-		}
-	}
-
 	// Group events by model
 	events.forEach((event) => {
 		const modelEvents = modelMap.get(event.model) || []
@@ -110,21 +98,8 @@ export function processModelMetrics(events: CursorUsageEvent[]): ModelMetrics[] 
 				// Include all token types: input, output, cache read, cache write
 				const inputTokens = event.tokenUsage.inputTokens || 0
 				const outputTokens = event.tokenUsage.outputTokens || 0
-				const cacheReadTokens = event.tokenUsage.cacheReadTokens || event.tokenUsage.cache_read_tokens || 0
-				const cacheWriteTokens = event.tokenUsage.cacheWriteTokens || event.tokenUsage.cache_write_tokens || 0
-
-				// Log for debugging (only for first model)
-				if (modelName === Array.from(modelMap.keys())[0] && sum === 0) {
-					console.log(`Token breakdown for ${modelName}:`, {
-						input: inputTokens,
-						output: outputTokens,
-						cacheRead: cacheReadTokens,
-						cacheWrite: cacheWriteTokens,
-						totalForEvent: inputTokens + outputTokens + cacheReadTokens + cacheWriteTokens,
-					})
-				}
-
-				return sum + inputTokens + outputTokens + cacheReadTokens + cacheWriteTokens
+				const cacheReadTokens = event.tokenUsage.cacheReadTokens || 0
+				return sum + inputTokens + outputTokens + cacheReadTokens
 			}
 			return sum
 		}, 0)
@@ -185,9 +160,8 @@ export function calculateSummary(events: CursorUsageEvent[]): AnalyticsSummary {
 		if (event.tokenUsage) {
 			const inputTokens = event.tokenUsage.inputTokens || 0
 			const outputTokens = event.tokenUsage.outputTokens || 0
-			const cacheReadTokens = event.tokenUsage.cacheReadTokens || event.tokenUsage.cache_read_tokens || 0
-			const cacheWriteTokens = event.tokenUsage.cacheWriteTokens || event.tokenUsage.cache_write_tokens || 0
-			return sum + inputTokens + outputTokens + cacheReadTokens + cacheWriteTokens
+			const cacheReadTokens = event.tokenUsage.cacheReadTokens || 0
+			return sum + inputTokens + outputTokens + cacheReadTokens
 		}
 		return sum
 	}, 0)

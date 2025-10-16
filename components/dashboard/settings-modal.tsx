@@ -13,17 +13,31 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Settings, Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 
 interface SettingsModalProps {
 	token: string
+	plan: string
+	billingStartDate: string
 	onTokenChange: (token: string) => void
+	onPlanChange: (plan: string) => void
+	onBillingStartDateChange: (date: string) => void
 }
 
-export function SettingsModal({ token, onTokenChange }: SettingsModalProps) {
+export function SettingsModal({
+	token,
+	plan,
+	billingStartDate,
+	onTokenChange,
+	onPlanChange,
+	onBillingStartDateChange,
+}: SettingsModalProps) {
 	const [isOpen, setIsOpen] = useState(false)
 	const [tempToken, setTempToken] = useState(token)
+	const [tempPlan, setTempPlan] = useState(plan)
+	const [tempBillingStartDate, setTempBillingStartDate] = useState(billingStartDate)
 	const { theme, setTheme } = useTheme()
 	const [mounted, setMounted] = useState(false)
 
@@ -31,13 +45,35 @@ export function SettingsModal({ token, onTokenChange }: SettingsModalProps) {
 		setMounted(true)
 	}, [])
 
+	// Sync temp state with props when they change
+	useEffect(() => {
+		setTempToken(token)
+		setTempPlan(plan)
+		setTempBillingStartDate(billingStartDate)
+	}, [token, plan, billingStartDate])
+
+	// Reset temp state when modal opens
+	const handleOpenChange = (open: boolean) => {
+		setIsOpen(open)
+		if (open) {
+			// Reset temp values to current props when opening
+			setTempToken(token)
+			setTempPlan(plan)
+			setTempBillingStartDate(billingStartDate)
+		}
+	}
+
 	const handleSave = () => {
 		onTokenChange(tempToken)
+		onPlanChange(tempPlan)
+		onBillingStartDateChange(tempBillingStartDate)
 		setIsOpen(false)
 	}
 
 	const handleCancel = () => {
 		setTempToken(token)
+		setTempPlan(plan)
+		setTempBillingStartDate(billingStartDate)
 		setIsOpen(false)
 	}
 
@@ -46,7 +82,7 @@ export function SettingsModal({ token, onTokenChange }: SettingsModalProps) {
 	}
 
 	return (
-		<Dialog open={isOpen} onOpenChange={setIsOpen}>
+		<Dialog open={isOpen} onOpenChange={handleOpenChange}>
 			<DialogTrigger asChild>
 				<Button variant="outline" size="sm">
 					<Settings className="h-4 w-4" />
@@ -55,7 +91,10 @@ export function SettingsModal({ token, onTokenChange }: SettingsModalProps) {
 			<DialogContent className="sm:max-w-[425px]">
 				<DialogHeader>
 					<DialogTitle>Settings</DialogTitle>
-					<DialogDescription>Configure your Cursor API token and theme preferences.</DialogDescription>
+					<DialogDescription>
+						Configure your Cursor API token, theme preferences, and subscription plan. Billing cycle day is
+						automatically detected from your usage data.
+					</DialogDescription>
 				</DialogHeader>
 				<div className="grid gap-6 py-4">
 					{/* Theme Toggle */}
@@ -72,6 +111,26 @@ export function SettingsModal({ token, onTokenChange }: SettingsModalProps) {
 							/>
 							<Moon className="h-4 w-4" />
 						</div>
+					</div>
+
+					{/* Plan Selection */}
+					<div className="grid gap-2">
+						<Label htmlFor="plan" className="text-base font-medium">
+							Cursor Plan
+						</Label>
+						<div className="text-sm text-muted-foreground mb-2">
+							Select your Cursor subscription plan to track usage limits.
+						</div>
+						<Select value={tempPlan} onValueChange={setTempPlan}>
+							<SelectTrigger>
+								<SelectValue placeholder="Select your plan" />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="pro">$20 Pro (gives $20 worth)</SelectItem>
+								<SelectItem value="pro-plus">$60 Pro+ (gives $70 worth)</SelectItem>
+								<SelectItem value="ultra">$200 Ultra (gives $400 worth)</SelectItem>
+							</SelectContent>
+						</Select>
 					</div>
 
 					{/* API Token */}

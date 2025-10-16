@@ -18,7 +18,7 @@ function getAPIConfig(): APIConfig {
 	// Get token from localStorage if on client, otherwise from env as fallback
 	let token = process.env.CURSOR_API_TOKEN
 	if (isClient) {
-		token = localStorage.getItem("cursor-api-token") || process.env.CURSOR_API_TOKEN
+		token = localStorage.getItem("cursor-api-token") || undefined
 	}
 
 	const baseUrl = DEFAULT_CONFIG.baseUrl || "https://cursor.com"
@@ -82,15 +82,9 @@ export async function fetchUsageEvents(): Promise<CursorAPIResponse> {
  */
 export async function fetchAllUsageEvents(): Promise<CursorUsageEvent[]> {
 	const response = await fetchUsageEvents()
-	console.log("Full API Response:", JSON.stringify(response, null, 2))
 
 	// Try different possible field names for the events array
 	const events = response.usageEventsDisplay || []
-
-	console.log(`Found ${events.length} events`)
-	if (events.length > 0) {
-		console.log("First event structure:", JSON.stringify(events[0], null, 2))
-	}
 
 	return events
 }

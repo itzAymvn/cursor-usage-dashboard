@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { OnboardingModal } from "@/components/dashboard/onboarding-modal"
-import { SummaryCards, SecondaryMetrics } from "@/components/dashboard/summary-cards"
+import { SummaryCards } from "@/components/dashboard/summary-cards"
 import { ModelTable } from "@/components/dashboard/model-table"
 import { SettingsModal } from "@/components/dashboard/settings-modal"
+import { PlanUsageCard } from "@/components/dashboard/plan-usage-card"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { UsageAnalytics } from "@/lib/types"
@@ -16,11 +17,16 @@ export default function Dashboard() {
 	const [error, setError] = useState<string | null>(null)
 	const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
 	const [apiToken, setApiToken] = useState<string>("")
+	const [plan, setPlan] = useState<string>("pro")
 
-	// Load token from localStorage on mount
+	// Load settings from localStorage on mount
 	useEffect(() => {
-		const storedToken = localStorage.getItem("cursor-api-token") || ""
-		setApiToken(storedToken)
+		if (typeof window !== "undefined") {
+			const storedToken = localStorage.getItem("cursor-api-token") || ""
+			const storedPlan = localStorage.getItem("cursor-plan") || "pro"
+			setApiToken(storedToken)
+			setPlan(storedPlan)
+		}
 	}, [])
 
 	// Show onboarding modal if no token is set
@@ -38,6 +44,13 @@ export default function Dashboard() {
 		setShowOnboarding(false)
 		if (typeof window !== "undefined") {
 			localStorage.setItem("cursor-api-token", newToken)
+		}
+	}
+
+	const handlePlanChange = (newPlan: string) => {
+		setPlan(newPlan)
+		if (typeof window !== "undefined") {
+			localStorage.setItem("cursor-plan", newPlan)
 		}
 	}
 
@@ -110,7 +123,14 @@ export default function Dashboard() {
 									Last updated: {formatLastRefresh(lastRefresh)}
 								</div>
 							)}
-							<SettingsModal token={apiToken} onTokenChange={handleTokenChange} />
+							<SettingsModal
+								token={apiToken}
+								plan={plan}
+								billingStartDate=""
+								onTokenChange={handleTokenChange}
+								onPlanChange={handlePlanChange}
+								onBillingStartDateChange={() => {}}
+							/>
 							<Button
 								onClick={fetchAnalytics}
 								disabled={isLoading || !apiToken}
@@ -150,8 +170,17 @@ export default function Dashboard() {
 				{/* Summary Cards */}
 				{analytics && <SummaryCards summary={analytics.summary} isLoading={isLoading} />}
 
-				{/* Secondary Metrics */}
-				{analytics && <SecondaryMetrics summary={analytics.summary} isLoading={isLoading} />}
+				{/* Plan Usage */}
+				{analytics && (
+					<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+						<PlanUsageCard
+							summary={analytics.summary}
+							plan={plan}
+							dateRangeStart={analytics.dateRange.start}
+							isLoading={isLoading}
+						/>
+					</div>
+				)}
 
 				{/* Model Breakdown Table */}
 				<div className="space-y-4">

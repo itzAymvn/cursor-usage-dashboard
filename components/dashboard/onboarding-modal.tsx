@@ -58,7 +58,7 @@ export function OnboardingModal({ isOpen, onTokenSubmit, onOpenSettings }: Onboa
 								Find the <code className="bg-muted px-1 rounded text-xs">WorkosCursorSessionToken</code>{" "}
 								cookie
 							</li>
-							<li>Copy its value below</li>
+							<li>Copy its value and paste it below</li>
 						</ol>
 					</div>
 
