@@ -1,7 +1,6 @@
 "use client"
 
 import { useMemo } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { AnalyticsSummary } from "@/lib/types"
@@ -72,36 +71,34 @@ export function PlanUsageCard({ summary, plan, dateRangeStart, isLoading = false
 
 	if (isLoading) {
 		return (
-			<Card>
-				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-					<CardTitle className="text-sm font-medium">
+			<div className="bg-card rounded-lg border p-6">
+				<div className="flex flex-row items-center justify-between space-y-0 pb-2">
+					<div className="text-sm font-medium">
 						<div className="h-4 bg-muted rounded animate-pulse w-24" />
-					</CardTitle>
-				</CardHeader>
-				<CardContent>
-					<div className="space-y-4">
-						<div className="h-6 bg-muted rounded animate-pulse" />
-						<div className="h-2 bg-muted rounded animate-pulse" />
-						<div className="h-4 bg-muted rounded animate-pulse w-20" />
 					</div>
-				</CardContent>
-			</Card>
+				</div>
+				<div className="space-y-4">
+					<div className="h-6 bg-muted rounded animate-pulse" />
+					<div className="h-2 bg-muted rounded animate-pulse" />
+					<div className="h-4 bg-muted rounded animate-pulse w-20" />
+				</div>
+			</div>
 		)
 	}
 
 	const { totalUsage, limit, percentage, remaining, daysRemaining, daysUntilLimit } = usageData
 
 	return (
-		<>
-			{/* Plan Usage Progress */}
-			<Card>
-				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-					<CardTitle className="text-sm font-medium">Plan Usage</CardTitle>
-					<Badge variant="secondary" className="text-xs">
-						{plan.toUpperCase()}
-					</Badge>
-				</CardHeader>
-				<CardContent>
+		<div className="bg-card rounded-lg border p-6">
+			<div className="flex flex-row items-center justify-between space-y-0 pb-2">
+				<div className="text-sm font-medium">Plan Usage</div>
+				<Badge variant="secondary" className="text-xs">
+					{plan.toUpperCase()}
+				</Badge>
+			</div>
+			<div className="space-y-4">
+				{/* Main Usage Progress */}
+				<div>
 					<div className="text-2xl font-bold">
 						{formatCurrency(totalUsage)} / {formatCurrency(limit)}
 					</div>
@@ -109,44 +106,27 @@ export function PlanUsageCard({ summary, plan, dateRangeStart, isLoading = false
 					<p className="text-xs text-muted-foreground mt-1">
 						{percentage.toFixed(1)}% used • {formatCurrency(remaining)} remaining
 					</p>
-				</CardContent>
-			</Card>
+				</div>
 
-			{/* Days Until Limit */}
-			<Card>
-				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-					<CardTitle className="text-sm font-medium">Days Until Limit</CardTitle>
-					<Clock className="h-4 w-4 text-muted-foreground" />
-				</CardHeader>
-				<CardContent>
-					<div className="text-2xl font-bold">{daysUntilLimit}</div>
-					<p className="text-xs text-muted-foreground">at current usage rate</p>
-				</CardContent>
-			</Card>
+				{/* Additional Metrics Grid */}
+				<div className="grid grid-cols-2 gap-4 pt-2 border-t">
+					<div className="flex items-center space-x-2">
+						<Clock className="h-4 w-4 text-muted-foreground" />
+						<div>
+							<div className="text-sm font-medium">{daysUntilLimit} days</div>
+							<div className="text-xs text-muted-foreground">until limit</div>
+						</div>
+					</div>
 
-			{/* Billing Cycle */}
-			<Card>
-				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-					<CardTitle className="text-sm font-medium">Billing Cycle</CardTitle>
-					<Calendar className="h-4 w-4 text-muted-foreground" />
-				</CardHeader>
-				<CardContent>
-					<div className="text-2xl font-bold">{daysRemaining}</div>
-					<p className="text-xs text-muted-foreground">days until reset</p>
-				</CardContent>
-			</Card>
-
-			{/* Daily Usage */}
-			<Card>
-				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-					<CardTitle className="text-sm font-medium">Daily Usage</CardTitle>
-					<TrendingUp className="h-4 w-4 text-muted-foreground" />
-				</CardHeader>
-				<CardContent>
-					<div className="text-2xl font-bold">{formatCurrency(summary.dailyAverage)}</div>
-					<p className="text-xs text-muted-foreground">average per day</p>
-				</CardContent>
-			</Card>
-		</>
+					<div className="flex items-center space-x-2">
+						<Calendar className="h-4 w-4 text-muted-foreground" />
+						<div>
+							<div className="text-sm font-medium">{daysRemaining} days</div>
+							<div className="text-xs text-muted-foreground">until reset</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
 	)
 }

@@ -172,13 +172,19 @@ export default function Dashboard() {
 
 				{/* Plan Usage */}
 				{analytics && (
-					<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-						<PlanUsageCard
-							summary={analytics.summary}
-							plan={plan}
-							dateRangeStart={analytics.dateRange.start}
-							isLoading={isLoading}
-						/>
+					<div className="space-y-4">
+						<div>
+							<h2 className="text-2xl font-semibold tracking-tight">Plan Usage</h2>
+							<p className="text-muted-foreground">Track your current usage against plan limits</p>
+						</div>
+						<div className="max-w-md">
+							<PlanUsageCard
+								summary={analytics.summary}
+								plan={plan}
+								dateRangeStart={analytics.dateRange.start}
+								isLoading={isLoading}
+							/>
+						</div>
 					</div>
 				)}
 

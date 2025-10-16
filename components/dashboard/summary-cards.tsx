@@ -4,9 +4,9 @@ import {
   DollarSign,
   TrendingUp,
   Activity,
-  Calculator,
   PiggyBank,
   BarChart3,
+  Calendar,
 } from 'lucide-react';
 
 interface SummaryCardsProps {
@@ -16,7 +16,7 @@ interface SummaryCardsProps {
 
 export function SummaryCards({ summary, isLoading = false }: SummaryCardsProps) {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       {/* Total M Tokens */}
       <MetricCard
         title="Total M Tokens"
@@ -39,23 +39,23 @@ export function SummaryCards({ summary, isLoading = false }: SummaryCardsProps) 
         className="col-span-1"
       />
 
-      {/* Cursor Reports */}
+      {/* Your Cost */}
       <MetricCard
-        title="Cursor Reports"
-        value={summary.cursorCharges}
-        subtitle="Cursor charges"
-        icon={Calculator}
+        title="Your Cost"
+        value={summary.yourCost}
+        subtitle="What you pay to Cursor"
+        icon={Activity}
         format="currency"
         isLoading={isLoading}
         className="col-span-1"
       />
 
-      {/* Your Cost */}
+      {/* Projected Monthly */}
       <MetricCard
-        title="Your Cost"
-        value={summary.yourCost}
-        subtitle="Paid calls only"
-        icon={Activity}
+        title="Projected Monthly"
+        value={summary.projectedMonthly}
+        subtitle="30-day estimate"
+        icon={Calendar}
         format="currency"
         isLoading={isLoading}
         className="col-span-1"
@@ -75,17 +75,6 @@ export function SummaryCards({ summary, isLoading = false }: SummaryCardsProps) 
         isLoading={isLoading}
         className="col-span-1"
       />
-
-      {/* Total Calls */}
-      <MetricCard
-        title="Total Calls"
-        value={summary.totalCalls}
-        subtitle="All API requests"
-        icon={TrendingUp}
-        format="raw"
-        isLoading={isLoading}
-        className="col-span-1"
-      />
     </div>
   );
 }
@@ -97,7 +86,7 @@ interface SecondaryMetricsProps {
 
 export function SecondaryMetrics({ summary, isLoading = false }: SecondaryMetricsProps) {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {/* Daily Average */}
       <MetricCard
         title="Daily Average"
@@ -108,15 +97,6 @@ export function SecondaryMetrics({ summary, isLoading = false }: SecondaryMetric
           value: summary.trend,
           label: 'from last week',
         }}
-        isLoading={isLoading}
-      />
-
-      {/* Projected Monthly */}
-      <MetricCard
-        title="Projected Monthly"
-        value={summary.projectedMonthly}
-        subtitle="30-day estimate"
-        format="currency"
         isLoading={isLoading}
       />
 
