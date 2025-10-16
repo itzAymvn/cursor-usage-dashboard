@@ -4,12 +4,13 @@ import { useState, useEffect, useCallback } from "react"
 import { OnboardingModal } from "@/components/dashboard/onboarding-modal"
 import { SummaryCards } from "@/components/dashboard/summary-cards"
 import { ModelTable } from "@/components/dashboard/model-table"
+import { RequestsTable } from "@/components/dashboard/requests-table"
 import { SettingsModal } from "@/components/dashboard/settings-modal"
 import { PlanUsageCard } from "@/components/dashboard/plan-usage-card"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { UsageAnalytics } from "@/lib/types"
-import { RefreshCw, AlertCircle, CheckCircle, RotateCcw } from "lucide-react"
+import { RefreshCw, AlertCircle, CheckCircle, RotateCcw, Table, List } from "lucide-react"
 
 export default function Dashboard() {
 	const [analytics, setAnalytics] = useState<UsageAnalytics | null>(null)
@@ -21,6 +22,7 @@ export default function Dashboard() {
 	const [autoRefreshEnabled, setAutoRefreshEnabled] = useState<boolean>(false)
 	const [autoRefreshInterval, setAutoRefreshInterval] = useState<number>(300) // Default 5 minutes in seconds
 	const [countdown, setCountdown] = useState<number | null>(null)
+	const [currentView, setCurrentView] = useState<"models" | "requests">("models")
 
 	// Load settings from localStorage on mount
 	useEffect(() => {
@@ -281,14 +283,45 @@ export default function Dashboard() {
 					</div>
 				)}
 
-				{/* Model Breakdown Table */}
+				{/* Data Table */}
 				<div className="space-y-4">
-					<div>
-						<h2 className="text-2xl font-semibold tracking-tight">Model Breakdown</h2>
-						<p className="text-muted-foreground">Detailed usage statistics by AI model family</p>
+					<div className="flex items-center justify-between">
+						<div>
+							<h2 className="text-2xl font-semibold tracking-tight">
+								{currentView === "models" ? "Model Breakdown" : "All Requests"}
+							</h2>
+							<p className="text-muted-foreground">
+								{currentView === "models"
+									? "Detailed usage statistics by AI model family"
+									: "Individual API requests with full details"}
+							</p>
+						</div>
+						<div className="flex items-center gap-2">
+							<Button
+								onClick={() => setCurrentView("models")}
+								variant={currentView === "models" ? "default" : "outline"}
+								size="sm"
+							>
+								<Table className="h-4 w-4 mr-2" />
+								Models
+							</Button>
+							<Button
+								onClick={() => setCurrentView("requests")}
+								variant={currentView === "requests" ? "default" : "outline"}
+								size="sm"
+							>
+								<List className="h-4 w-4 mr-2" />
+								Requests
+							</Button>
+						</div>
 					</div>
 
-					{analytics && <ModelTable models={analytics.models} isLoading={isLoading} />}
+					{analytics && currentView === "models" && (
+						<ModelTable models={analytics.models} isLoading={isLoading} />
+					)}
+					{analytics && currentView === "requests" && (
+						<RequestsTable requests={analytics.requests} isLoading={isLoading} />
+					)}
 				</div>
 			</main>
 

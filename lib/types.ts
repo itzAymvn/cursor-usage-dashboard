@@ -54,6 +54,7 @@ export interface AnalyticsSummary {
 export interface UsageAnalytics {
 	summary: AnalyticsSummary
 	models: ModelMetrics[]
+	requests: CursorUsageEvent[]
 	lastUpdated: string
 	dateRange: {
 		start: string

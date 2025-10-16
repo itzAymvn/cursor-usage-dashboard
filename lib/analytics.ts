@@ -239,6 +239,7 @@ export function processUsageAnalytics(events: CursorUsageEvent[]): UsageAnalytic
 	return {
 		summary,
 		models,
+		requests: events,
 		lastUpdated: new Date().toISOString(),
 		dateRange: {
 			start,
