@@ -7,6 +7,9 @@ import { ModelTable } from "@/components/dashboard/model-table"
 import { RequestsTable } from "@/components/dashboard/requests-table"
 import { SettingsModal } from "@/components/dashboard/settings-modal"
 import { PlanUsageCard } from "@/components/dashboard/plan-usage-card"
+import { ModelUsagePieChart } from "@/components/dashboard/charts/model-usage-pie-chart"
+import { CostBreakdownBarChart } from "@/components/dashboard/charts/cost-breakdown-bar-chart"
+import { TokenUsageBarChart } from "@/components/dashboard/charts/token-usage-bar-chart"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { UsageAnalytics } from "@/lib/types"
@@ -107,7 +110,11 @@ export default function Dashboard() {
 				}
 				setError(null)
 
-				const response = await fetch("/api/usage")
+				const response = await fetch("/api/usage", {
+					headers: {
+						Authorization: `Bearer ${apiToken}`,
+					},
+				})
 				const data = await response.json()
 
 				if (!response.ok) {
@@ -282,6 +289,29 @@ export default function Dashboard() {
 				{analytics && (
 					<SummaryCards summary={analytics.summary} isLoading={isLoading} isRefreshing={isRefreshing} />
 				)}
+
+				{/* Charts */}
+				<div className="space-y-6">
+					<div>
+						<h2 className="text-2xl font-semibold tracking-tight">Usage Analytics</h2>
+						<p className="text-muted-foreground">Visual breakdown of your AI model usage patterns</p>
+					</div>
+					<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+						{analytics && (
+							<>
+								<div className="md:col-span-2 lg:col-span-1">
+									<ModelUsagePieChart models={analytics.models} isLoading={isLoading} />
+								</div>
+								<div className="md:col-span-2 lg:col-span-1">
+									<TokenUsageBarChart models={analytics.models} isLoading={isLoading} />
+								</div>
+								<div className="md:col-span-2 lg:col-span-1">
+									<CostBreakdownBarChart models={analytics.models} isLoading={isLoading} />
+								</div>
+							</>
+						)}
+					</div>
+				</div>
 
 				{/* Plan Usage */}
 				{analytics && (

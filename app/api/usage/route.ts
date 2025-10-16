@@ -7,10 +7,24 @@ import { NextResponse } from "next/server"
  * GET /api/usage
  * Fetches and processes Cursor usage analytics
  */
-export async function GET() {
+export async function GET(request: Request) {
 	try {
+		// Get token from Authorization header
+		const authHeader = request.headers.get("Authorization")
+		if (!authHeader || !authHeader.startsWith("Bearer ")) {
+			return NextResponse.json(
+				{
+					error: "Authentication Error",
+					message: "API token is required",
+				},
+				{ status: 401 }
+			)
+		}
+
+		const token = authHeader.substring(7) // Remove "Bearer " prefix
+
 		// Fetch all usage events from Cursor API
-		const events = await fetchAllUsageEvents()
+		const events = await fetchAllUsageEvents(token)
 
 		if (events.length === 0) {
 			return NextResponse.json(

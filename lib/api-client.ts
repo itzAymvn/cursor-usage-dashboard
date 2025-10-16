@@ -9,27 +9,21 @@ const DEFAULT_CONFIG: Partial<APIConfig> = {
 }
 
 /**
- * Gets API configuration from local storage
+ * Gets API configuration
  */
-function getAPIConfig(): APIConfig {
-	// Check if we're on the client side
-	const isClient = typeof window !== "undefined"
-
-	// Get token from localStorage if on client, otherwise from env as fallback
-	let token = process.env.CURSOR_API_TOKEN
-	if (isClient) {
-		token = localStorage.getItem("cursor-api-token") || undefined
-	}
+function getAPIConfig(token?: string): APIConfig {
+	// Use provided token, or fallback to env (for backward compatibility)
+	const apiToken = token || process.env.CURSOR_API_TOKEN
 
 	const baseUrl = DEFAULT_CONFIG.baseUrl || "https://cursor.com"
 
-	if (!token) {
+	if (!apiToken) {
 		throw new Error("Cursor API token is required. Please set it in settings.")
 	}
 
 	return {
 		baseUrl,
-		token,
+		token: apiToken,
 		timeout: DEFAULT_CONFIG.timeout!,
 	}
 }
@@ -37,8 +31,8 @@ function getAPIConfig(): APIConfig {
 /**
  * Makes authenticated request to Cursor API
  */
-async function makeCursorAPIRequest(options: RequestInit = {}): Promise<Response> {
-	const config = getAPIConfig()
+async function makeCursorAPIRequest(token: string, options: RequestInit = {}): Promise<Response> {
+	const config = getAPIConfig(token)
 
 	const url = `${config.baseUrl}/api/dashboard/get-filtered-usage-events`
 
@@ -70,8 +64,8 @@ async function makeCursorAPIRequest(options: RequestInit = {}): Promise<Response
 /**
  * Fetches usage events from Cursor API
  */
-export async function fetchUsageEvents(): Promise<CursorAPIResponse> {
-	const response = await makeCursorAPIRequest()
+export async function fetchUsageEvents(token: string): Promise<CursorAPIResponse> {
+	const response = await makeCursorAPIRequest(token)
 	const data: CursorAPIResponse = await response.json()
 
 	return data
@@ -80,8 +74,8 @@ export async function fetchUsageEvents(): Promise<CursorAPIResponse> {
 /**
  * Fetches all usage events
  */
-export async function fetchAllUsageEvents(): Promise<CursorUsageEvent[]> {
-	const response = await fetchUsageEvents()
+export async function fetchAllUsageEvents(token: string): Promise<CursorUsageEvent[]> {
+	const response = await fetchUsageEvents(token)
 
 	// Try different possible field names for the events array
 	const events = response.usageEventsDisplay || []
