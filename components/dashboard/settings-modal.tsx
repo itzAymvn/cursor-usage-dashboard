@@ -21,23 +21,33 @@ interface SettingsModalProps {
 	token: string
 	plan: string
 	billingStartDate: string
+	autoRefreshEnabled: boolean
+	autoRefreshInterval: number
 	onTokenChange: (token: string) => void
 	onPlanChange: (plan: string) => void
 	onBillingStartDateChange: (date: string) => void
+	onAutoRefreshChange: (enabled: boolean) => void
+	onAutoRefreshIntervalChange: (interval: number) => void
 }
 
 export function SettingsModal({
 	token,
 	plan,
 	billingStartDate,
+	autoRefreshEnabled,
+	autoRefreshInterval,
 	onTokenChange,
 	onPlanChange,
 	onBillingStartDateChange,
+	onAutoRefreshChange,
+	onAutoRefreshIntervalChange,
 }: SettingsModalProps) {
 	const [isOpen, setIsOpen] = useState(false)
 	const [tempToken, setTempToken] = useState(token)
 	const [tempPlan, setTempPlan] = useState(plan)
 	const [tempBillingStartDate, setTempBillingStartDate] = useState(billingStartDate)
+	const [tempAutoRefreshEnabled, setTempAutoRefreshEnabled] = useState(autoRefreshEnabled)
+	const [tempAutoRefreshInterval, setTempAutoRefreshInterval] = useState(autoRefreshInterval)
 	const { theme, setTheme } = useTheme()
 	const [mounted, setMounted] = useState(false)
 
@@ -50,7 +60,9 @@ export function SettingsModal({
 		setTempToken(token)
 		setTempPlan(plan)
 		setTempBillingStartDate(billingStartDate)
-	}, [token, plan, billingStartDate])
+		setTempAutoRefreshEnabled(autoRefreshEnabled)
+		setTempAutoRefreshInterval(autoRefreshInterval)
+	}, [token, plan, billingStartDate, autoRefreshEnabled, autoRefreshInterval])
 
 	// Reset temp state when modal opens
 	const handleOpenChange = (open: boolean) => {
@@ -60,6 +72,8 @@ export function SettingsModal({
 			setTempToken(token)
 			setTempPlan(plan)
 			setTempBillingStartDate(billingStartDate)
+			setTempAutoRefreshEnabled(autoRefreshEnabled)
+			setTempAutoRefreshInterval(autoRefreshInterval)
 		}
 	}
 
@@ -67,6 +81,8 @@ export function SettingsModal({
 		onTokenChange(tempToken)
 		onPlanChange(tempPlan)
 		onBillingStartDateChange(tempBillingStartDate)
+		onAutoRefreshChange(tempAutoRefreshEnabled)
+		onAutoRefreshIntervalChange(tempAutoRefreshInterval)
 		setIsOpen(false)
 	}
 
@@ -74,6 +90,8 @@ export function SettingsModal({
 		setTempToken(token)
 		setTempPlan(plan)
 		setTempBillingStartDate(billingStartDate)
+		setTempAutoRefreshEnabled(autoRefreshEnabled)
+		setTempAutoRefreshInterval(autoRefreshInterval)
 		setIsOpen(false)
 	}
 
@@ -112,6 +130,41 @@ export function SettingsModal({
 							<Moon className="h-4 w-4" />
 						</div>
 					</div>
+
+					{/* Auto Refresh Toggle */}
+					<div className="flex items-center justify-between">
+						<div className="space-y-0.5">
+							<Label className="text-base font-medium">Auto Refresh</Label>
+							<div className="text-sm text-muted-foreground">
+								Automatically refresh data at set intervals
+							</div>
+						</div>
+						<Switch checked={tempAutoRefreshEnabled} onCheckedChange={setTempAutoRefreshEnabled} />
+					</div>
+
+					{/* Auto Refresh Interval */}
+					{tempAutoRefreshEnabled && (
+						<div className="grid gap-2">
+							<Label htmlFor="refresh-interval" className="text-base font-medium">
+								Refresh Interval (seconds)
+							</Label>
+							<div className="text-sm text-muted-foreground mb-2">
+								How many seconds between automatic refreshes
+							</div>
+							<Input
+								id="refresh-interval"
+								type="number"
+								min="10"
+								max="3600"
+								value={tempAutoRefreshInterval}
+								onChange={(e) =>
+									setTempAutoRefreshInterval(Math.max(10, parseInt(e.target.value) || 10))
+								}
+								className="font-mono text-sm"
+								placeholder="300"
+							/>
+						</div>
+					)}
 
 					{/* Plan Selection */}
 					<div className="grid gap-2">

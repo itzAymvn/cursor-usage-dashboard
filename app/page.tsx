@@ -9,7 +9,7 @@ import { PlanUsageCard } from "@/components/dashboard/plan-usage-card"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { UsageAnalytics } from "@/lib/types"
-import { RefreshCw, AlertCircle, CheckCircle } from "lucide-react"
+import { RefreshCw, AlertCircle, CheckCircle, RotateCcw } from "lucide-react"
 
 export default function Dashboard() {
 	const [analytics, setAnalytics] = useState<UsageAnalytics | null>(null)
@@ -18,14 +18,21 @@ export default function Dashboard() {
 	const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
 	const [apiToken, setApiToken] = useState<string>("")
 	const [plan, setPlan] = useState<string>("pro")
+	const [autoRefreshEnabled, setAutoRefreshEnabled] = useState<boolean>(false)
+	const [autoRefreshInterval, setAutoRefreshInterval] = useState<number>(300) // Default 5 minutes in seconds
+	const [countdown, setCountdown] = useState<number | null>(null)
 
 	// Load settings from localStorage on mount
 	useEffect(() => {
 		if (typeof window !== "undefined") {
 			const storedToken = localStorage.getItem("cursor-api-token") || ""
 			const storedPlan = localStorage.getItem("cursor-plan") || "pro"
+			const storedAutoRefresh = localStorage.getItem("cursor-auto-refresh") === "true"
+			const storedInterval = parseInt(localStorage.getItem("cursor-auto-refresh-interval") || "300")
 			setApiToken(storedToken)
 			setPlan(storedPlan)
+			setAutoRefreshEnabled(storedAutoRefresh)
+			setAutoRefreshInterval(storedInterval)
 		}
 	}, [])
 
@@ -51,6 +58,28 @@ export default function Dashboard() {
 		setPlan(newPlan)
 		if (typeof window !== "undefined") {
 			localStorage.setItem("cursor-plan", newPlan)
+		}
+	}
+
+	const handleAutoRefreshChange = (enabled: boolean) => {
+		setAutoRefreshEnabled(enabled)
+		if (typeof window !== "undefined") {
+			localStorage.setItem("cursor-auto-refresh", enabled.toString())
+		}
+		if (!enabled) {
+			setCountdown(null)
+		} else {
+			setCountdown(autoRefreshInterval)
+		}
+	}
+
+	const handleAutoRefreshIntervalChange = (interval: number) => {
+		setAutoRefreshInterval(interval)
+		if (typeof window !== "undefined") {
+			localStorage.setItem("cursor-auto-refresh-interval", interval.toString())
+		}
+		if (autoRefreshEnabled) {
+			setCountdown(interval)
 		}
 	}
 
@@ -95,6 +124,44 @@ export default function Dashboard() {
 		}
 	}, [apiToken, fetchAnalytics])
 
+	// Auto-refresh effect
+	useEffect(() => {
+		let intervalId: NodeJS.Timeout | null = null
+		let countdownId: NodeJS.Timeout | null = null
+
+		if (autoRefreshEnabled && apiToken) {
+			// Set initial countdown
+			setCountdown(autoRefreshInterval)
+
+			// Countdown timer (updates every second)
+			countdownId = setInterval(() => {
+				setCountdown((prev) => {
+					if (prev === null || prev <= 1) {
+						return autoRefreshInterval
+					}
+					return prev - 1
+				})
+			}, 1000)
+
+			// Refresh interval (uses configurable interval in seconds)
+			intervalId = setInterval(() => {
+				fetchAnalytics()
+				setCountdown(autoRefreshInterval) // Reset countdown after refresh
+			}, autoRefreshInterval * 1000)
+		} else {
+			setCountdown(null)
+		}
+
+		return () => {
+			if (intervalId) {
+				clearInterval(intervalId)
+			}
+			if (countdownId) {
+				clearInterval(countdownId)
+			}
+		}
+	}, [autoRefreshEnabled, apiToken, autoRefreshInterval, fetchAnalytics])
+
 	const formatLastRefresh = (date: Date) => {
 		return date.toLocaleString("en-US", {
 			month: "short",
@@ -119,27 +186,53 @@ export default function Dashboard() {
 						</div>
 						<div className="flex items-center gap-4">
 							{lastRefresh && (
-								<div className="text-sm text-muted-foreground">
-									Last updated: {formatLastRefresh(lastRefresh)}
+								<div className="flex flex-col gap-1">
+									<div className="text-sm text-muted-foreground">
+										Last updated: {formatLastRefresh(lastRefresh)}
+									</div>
+									{autoRefreshEnabled && countdown !== null && (
+										<div className="flex items-center gap-1 text-green-600 dark:text-green-400">
+											<RotateCcw className="h-4 w-4 animate-spin" />
+											<span className="text-sm font-medium">
+												Next refresh in: {countdown > 0 ? `${countdown}s` : "Refreshing..."}
+											</span>
+										</div>
+									)}
 								</div>
 							)}
 							<SettingsModal
 								token={apiToken}
 								plan={plan}
 								billingStartDate=""
+								autoRefreshEnabled={autoRefreshEnabled}
+								autoRefreshInterval={autoRefreshInterval}
 								onTokenChange={handleTokenChange}
 								onPlanChange={handlePlanChange}
 								onBillingStartDateChange={() => {}}
+								onAutoRefreshChange={handleAutoRefreshChange}
+								onAutoRefreshIntervalChange={handleAutoRefreshIntervalChange}
 							/>
-							<Button
-								onClick={fetchAnalytics}
-								disabled={isLoading || !apiToken}
-								variant="outline"
-								size="sm"
-							>
-								<RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
-								Refresh
-							</Button>
+							<div className="flex items-center gap-2">
+								<Button
+									onClick={fetchAnalytics}
+									disabled={isLoading || !apiToken}
+									variant="outline"
+									size="sm"
+								>
+									<RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+									Refresh
+								</Button>
+								<Button
+									onClick={() => handleAutoRefreshChange(!autoRefreshEnabled)}
+									disabled={!apiToken}
+									variant={autoRefreshEnabled ? "default" : "outline"}
+									size="sm"
+									className={autoRefreshEnabled ? "bg-green-600 hover:bg-green-700" : ""}
+								>
+									<RotateCcw className={`h-4 w-4 mr-2 ${autoRefreshEnabled ? "animate-spin" : ""}`} />
+									Auto
+								</Button>
+							</div>
 						</div>
 					</div>
 				</div>
